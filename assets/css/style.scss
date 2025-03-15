@@ -74,29 +74,28 @@ $hr-border-color: #BBBBBB !default;
     height: 50px;
 }
 
-.btn {
-    color: #FFFFFF;
-    border: 2px solid #FF4545;
-    background-color: #FF4545;
-    font-size: 14px;
-    padding: 10px;
-    border-radius: 20px;
-    width: 150px;  /* Adjusted for better readability */
-    height: 60px;  /* Fixed height */
-    display: inline-block;
-    text-align: center;
-    text-decoration: none;
-    font-weight: bold;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2), 0 6px 20px rgba(0,0,0,0.19);
-    transition: all 0.3s ease;
+.btn:hover {
+color: #FF4545;
+text-decoration: none;
+background-color: rgba(255,255,255,0.4);
+border-color: #FF4545;
+font-size: 80%;
+height: 20%;
+border-radius: 20px;
+width: 13%;
+box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
 }
 
-.btn:hover {
-    color: #FF4545;
-    background-color: rgba(255,255,255,0.4);
-    border-color: #FF4545;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    transform: scale(1.05);
+.btn {
+color: #FFFFFF;
+border-color: #FF4545;
+background-color: #FF4545;
+font-size: 80%;
+height: 20%;
+border-radius: 20px;
+width: 13%;
+box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+opacity: 0.7;
 }
 
 .site-footer {
