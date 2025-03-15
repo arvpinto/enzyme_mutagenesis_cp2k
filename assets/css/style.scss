@@ -74,37 +74,28 @@ $hr-border-color: #BBBBBB !default;
     height: 50px;
 }
 
-.buttongrp {
-  display: flex;
-  justify-content: center; /* Centers buttons */
-  align-items: center;
-  flex-wrap: wrap; /* Allows wrapping when necessary */
-  gap: 20px; /* Ensures even spacing */
-  width: 100%; /* Ensures full width */
-  max-width: 800px; /* Prevents excessive stretching */
-  margin: 0 auto; /* Centers the button group */
+.btn:hover {
+color: #FF4545;
+text-decoration: none;
+background-color: rgba(255,255,255,0.4);
+border-color: #FF4545;
+font-size: 80%;
+height: 20%;
+border-radius: 20px;
+width: 13%;
+box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
 }
 
 .btn {
-  flex: 0 0 180px; /* Fixes button width to 180px while keeping responsiveness */
-  height: 50px; /* Uniform height */
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  border-radius: 20px;
-  background-color: #FF4545;
-  color: #FFFFFF;
-  border: 2px solid #FF4545;
-  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  transition: all 0.3s ease-in-out;
-}
-
-.btn:hover {
-  background-color: rgba(255, 255, 255, 0.4);
-  color: #FF4545;
-  border-color: #FF4545;
+color: #FFFFFF;
+border-color: #FF4545;
+background-color: #FF4545;
+font-size: 80%;
+height: 20%;
+border-radius: 20px;
+width: 13%;
+box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+opacity: 0.7;
 }
 
 .site-footer {
