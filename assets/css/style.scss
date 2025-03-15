@@ -76,23 +76,23 @@ $hr-border-color: #BBBBBB !default;
 
 .buttongrp {
   display: flex;
-  justify-content: space-around; /* Ensures equal spacing */
+  justify-content: center; /* Centers buttons */
   align-items: center;
-  flex-wrap: wrap; /* Allows wrapping if necessary */
-  gap: 15px; /* Ensures even spacing */
+  flex-wrap: wrap; /* Allows wrapping when necessary */
+  gap: 20px; /* Ensures even spacing */
+  width: 100%; /* Ensures full width */
   max-width: 800px; /* Prevents excessive stretching */
   margin: 0 auto; /* Centers the button group */
 }
 
 .btn {
-  flex: 1 1 180px; /* Ensures all buttons have the same width while allowing responsiveness */
-  max-width: 200px; /* Prevents them from growing too large */
-  height: 50px;
+  flex: 0 0 180px; /* Fixes button width to 180px while keeping responsiveness */
+  height: 50px; /* Uniform height */
+  text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 16px;
-  text-align: center;
   border-radius: 20px;
   background-color: #FF4545;
   color: #FFFFFF;
@@ -106,6 +106,7 @@ $hr-border-color: #BBBBBB !default;
   color: #FF4545;
   border-color: #FF4545;
 }
+
 .site-footer {
   height: auto;
   width: auto;
