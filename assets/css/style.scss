@@ -69,12 +69,9 @@ $hr-border-color: #BBBBBB !default;
     margin-right: 50px; /* Adjust spacing */
 }
 
-.buttongrp {
-  display: flex;
-  justify-content: center; /* Centers items */
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px; /* Adds equal spacing */
+.github-button img {
+    width: 100px; /* Adjust size */
+    height: 100px;
 }
 
 .buttongrp {
