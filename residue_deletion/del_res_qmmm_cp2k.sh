@@ -2,10 +2,9 @@
 
 ### Check if usage is correct
 if [ $# -ne 6 ]; then
-
     echo "Usage: ./res_del_cp2k.sh <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
-
-else
+    exit 1
+fi
 
 ### Variables list
 res_list="$1"
@@ -82,4 +81,4 @@ echo ""
 ### Clean up
 rm cpptraj_del.in 
 
-fi
+
