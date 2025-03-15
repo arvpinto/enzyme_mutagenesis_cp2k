@@ -62,6 +62,13 @@ $hr-border-color: #BBBBBB !default;
   padding: 0px;
 }
 
+.github-button {
+    position: absolute;
+    right: 0;
+    top: 25%;
+    margin-right: 50px; /* Adjust spacing */
+}
+
 .buttongrp {
   display: flex;
   justify-content: space-evenly; /* Ensures equal spacing */
