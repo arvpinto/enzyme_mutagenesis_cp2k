@@ -29,9 +29,9 @@ $hr-border-color: #BBBBBB !default;
 @import "{{ site.theme }}";
 
 .project-name {
-  font-size: 200%;
+  font-size: 100%;
   width: 50%;
-  text-align: center;
+  text-align: justify;
   padding-top: 0px;
   padding-bottom: 0px;
   text-shadow: 0 0 3px #272727, 0 0 5px #272727;
