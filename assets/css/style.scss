@@ -62,6 +62,13 @@ $hr-border-color: #BBBBBB !default;
   padding: 0px;
 }
 
+.buttongrp {
+  display: flex;
+  justify-content: space-evenly; /* Ensures equal spacing */
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .btn:hover {
 color: #FF4545;
 text-decoration: none;
