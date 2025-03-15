@@ -69,13 +69,6 @@ $hr-border-color: #BBBBBB !default;
     margin-right: 50px; /* Adjust spacing */
 }
 
-.buttongrp {
-  display: flex;
-  justify-content: space-evenly; /* Ensures equal spacing */
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .btn:hover {
 color: #FF4545;
 text-decoration: none;
