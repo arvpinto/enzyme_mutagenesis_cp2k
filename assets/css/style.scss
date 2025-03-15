@@ -54,12 +54,10 @@ $hr-border-color: #BBBBBB !default;
 
 .header-right {
    width: 30%;
-   display: flex;
-   justify-content: center; /* Center content horizontally */
 }
 
 .page-header .logo {
-  width: 125%;
+  width: 100%;
   height: auto;
   padding: 0px;
 }
