@@ -76,20 +76,23 @@ $hr-border-color: #BBBBBB !default;
 
 .buttongrp {
   display: flex;
-  justify-content: center;  /* Centers buttons */
+  justify-content: space-around; /* Ensures equal spacing */
   align-items: center;
-  flex-wrap: wrap;  /* Allows buttons to wrap if needed */
-  gap: 15px;  /* Ensures equal spacing */
+  flex-wrap: wrap; /* Allows wrapping if necessary */
+  gap: 15px; /* Ensures even spacing */
+  max-width: 800px; /* Prevents excessive stretching */
+  margin: 0 auto; /* Centers the button group */
 }
 
 .btn {
-  width: 150px;  /* Fixed width ensures all buttons are the same size */
-  height: 50px;  /* Adjust based on design */
-  text-align: center;
+  flex: 1 1 180px; /* Ensures all buttons have the same width while allowing responsiveness */
+  max-width: 200px; /* Prevents them from growing too large */
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 16px; 
+  font-size: 16px;
+  text-align: center;
   border-radius: 20px;
   background-color: #FF4545;
   color: #FFFFFF;
@@ -103,7 +106,6 @@ $hr-border-color: #BBBBBB !default;
   color: #FF4545;
   border-color: #FF4545;
 }
-
 .site-footer {
   height: auto;
   width: auto;
