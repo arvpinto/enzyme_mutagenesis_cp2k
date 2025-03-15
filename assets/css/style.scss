@@ -69,6 +69,14 @@ $hr-border-color: #BBBBBB !default;
     margin-right: 50px; /* Adjust spacing */
 }
 
+.buttongrp {
+  display: flex;
+  justify-content: center; /* Centers items */
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px; /* Adds equal spacing */
+}
+
 .btn:hover {
 color: #FF4545;
 text-decoration: none;
@@ -88,6 +96,9 @@ background-color: #FF4545;
 font-size: 80%;
 height: 20%;
 border-radius: 20px;
+flex: 1; /* Allows buttons to grow equally */
+max-width: 200px; /* Prevents them from getting too wide */
+text-align: center;
 width: 13%;
 box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
 opacity: 0.7;
