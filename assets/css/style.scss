@@ -63,7 +63,9 @@ $hr-border-color: #BBBBBB !default;
 }
 
 .github-button {
-    position: static;
+  position: relative; /* Positioned relative to its normal position */
+  top: 10px; /* Moves the element down 10px */
+  right: 20px;
 }
 
 .github-button img {
