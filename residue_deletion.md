@@ -81,7 +81,7 @@ user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(
 The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_bar_plot.py energy_differences.dat
+user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 </pre>
 
 <br>
@@ -99,7 +99,7 @@ user@machine:~$ python E_diff_bar_plot.py energy_differences.dat
 For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences.dat 684 34856 1981 1982
+user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1981 1982
 </pre>
 
 <br/>
