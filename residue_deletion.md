@@ -53,7 +53,7 @@ user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 The <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ ./del_res_qmmm_cp2k.sh <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>
+user@machine:~$ ./del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
 </pre>
 <p align="justify"> It prepares a directory for each residue in the list where the input files for CP2K will be output. The supplied topology and structures will be processed through CPPTRAJ to delete each of the specified residues. Since deleting residues changes the atom numbering, the QM/MM settings must be updated for each deletion. The <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file must have tags (PRMTOP_TAG and STATE_TAG) placed in the right places. </p>
 
