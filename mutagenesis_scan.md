@@ -1,3 +1,5 @@
+<h2><p align="center"> <b>Mutagenesis Scan</b> </p> </h2>
+<br>
 <p align="justify"><b>This protocol is designed to calculate the energy contribution of amino acid residues to the energy barrier of a given reaction. This can be achieved by performing single-point calculations on the provided reactant and transition state structures, each with the specified residue deleted. </b></p>
 
 <p align="justify"> It requires a file with a list of residues to be deleted, a *prmtop file, reactant and transition state structures in the *pdb format, a CP2K input template, a list of residues to mutate and a selection of the QM region. The following packages are also required: VMD and CPPTRAJ (AmberTools). </p>
