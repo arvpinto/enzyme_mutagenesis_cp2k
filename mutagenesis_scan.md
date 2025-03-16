@@ -14,7 +14,7 @@
 
 <br/>
 
-A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). The preparation of the selection is explained in <a href="https://arvpinto.github.io/test/residue_deletion.html" target="_blank">I - Input Preparation section of the residue deletion protocol.</a>
+A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). The preparation of the selection is explained in the I - Input Preparation section of the <a href="https://arvpinto.github.io/test/residue_deletion.html" target="_blank">residue deletion protocol.</a>
 
 Open the system in VMD, save a *.gro file and a serial_numbers.dat file with the serial numbers of a selection:
 <pre style="color: white; background-color: black;">
