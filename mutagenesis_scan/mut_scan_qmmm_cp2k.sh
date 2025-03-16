@@ -4,7 +4,7 @@ PYMOL_PATH='/usr/bin/pymol'
 
 ### Check if the usage is correct
 if [ $# -ne 9 ]; then
-    echo "Usage mut_scan_qmmm_cp2k.sh <residue_list> <scan_type> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection>"
+    echo "Usage: ./mut_scan_qmmm_cp2k.sh <residue_list> <scan_type> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection>"
     exit 1 
 fi
 
