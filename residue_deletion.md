@@ -43,7 +43,7 @@ user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+
 
 <br/>
 
-Then the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a>mol2_vmd-qmsel.sh script can be used to extract the selection in the required format:
+Then the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
