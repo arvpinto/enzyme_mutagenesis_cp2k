@@ -14,7 +14,7 @@
 
 <br/>
 
-A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). The preparation of the selection is explained in the I - Input Preparation section of the <a href="https://arvpinto.github.io/test/residue_deletion.html" target="_blank">residue deletion protocol.</a>
+A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). The preparation of the selection is explained in the I - Input Preparation section of the <a href="https://arvpinto.github.io/test/residue_deletion.html" target="_blank">residue deletion protocol</a>.
 
 <br>
 
@@ -48,40 +48,26 @@ user@machine:~$ for i in ALA_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_r
 After running the optimization and single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue mutation:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in ALA_*; do echo "$i" | sed 's/ALA_//g'; done) <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences.dat
+user@machine:~$ paste <(for i in ALA_*; do echo "$i" | sed 's/ALA_//g'; done) <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_mut.dat
 </pre>
 
 <br/>
 
-The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
+The energy barriers can be compared to the ones calculated with the <a href="https://arvpinto.github.io/test/residue_deletion.html" target="_blank">residue deletion protocol</a> using the <a href="https://arvpinto.github.io/test/mutagenesis_scan/E_diff_comparison_bar_plot.py" target="_blank">E_diff_comparison_bar_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_bar_plot.py energy_differences.dat
+user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat energy_differences_mut.dat
 </pre>
 
 <br>
 
 <div align="center">
-    <img src="bar_plot.png">
+    <img src="comparison_bar_plot.png">
 </div>
 
 <br/>
 
 <p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. Here, we can see that the deletion of most residues is unfavorable (this is expected for a small protein in a system with a considerable amount of charged molecules), however, the deletion of residue 92 decreases the energy barrier. </p>
-
-<br>
-
-For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:
-
-<pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences.dat 684 34856 1981 1982
-</pre>
-
-<br/>
-
-<div align="center">
-    <img src="marker_plot.png">
-</div>
 
 <br>
 
