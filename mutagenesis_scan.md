@@ -1,4 +1,6 @@
-<br>
+
+
+
 <h2><p align="center"> <b>Mutagenesis Scan</b> </p> </h2>
 
 <p align="justify"><b>This protocol is designed to calculate the energy contribution of amino acid residues to the energy barrier of a given reaction. This can be achieved by performing single-point calculations on the provided reactant and transition state structures, each with the specified residue deleted. </b></p>
