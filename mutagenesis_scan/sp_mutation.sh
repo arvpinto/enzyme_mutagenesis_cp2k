@@ -4,7 +4,7 @@ PYMOL_PATH='/usr/bin/pymol'
 
 # Check if the usage is correct
 if [ $# -ne 7 ]; then
-    echo "Usage sp_mutation.sh <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
+    echo "Usage: ./sp_mutation.sh <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
     exit 1  
 fi
 
