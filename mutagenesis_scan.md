@@ -3,9 +3,9 @@
 
 <h2><p align="center"> <b>Mutagenesis Scan</b> </p> </h2>
 
-<p align="justify"><b>This protocol is designed to calculate the energy contribution of amino acid residues to the energy barrier of a given reaction. This can be achieved by performing single-point calculations on the provided reactant and transition state structures, each with the specified residue deleted. </b></p>
+<p align="justify"><b>This protocol is designed to perform a mutagenesis scan with residues such as ALA or GLY. The mutated residues are optimized while keeping the rest of the system fixed, and then single-point calculations are performed on the provided reactant and transition state structures. </b></p>
 
-<p align="justify"> It requires a file with a list of residues to be deleted, a *prmtop file, reactant and transition state structures in the *pdb format, a CP2K input template, a list of residues to mutate and a selection of the QM region. The following packages are also required: VMD and CPPTRAJ (AmberTools). </p>
+<p align="justify"> It requires a file with a list of residues to be mutated, a *prmtop file, reactant and transition state structures in the *pdb format, LEaP and CP2K input templates and a selection of the QM region. The following packages are also required: CP2K, PyMOL, VMD, LEaP, CPPTRAJ and ParmEd (AmberTools). </p>
 
 ---
 
@@ -14,7 +14,7 @@
 
 <br/>
 
-A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). This can be achieved through the following procedure:
+A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). The preparation of the selection is explained in <a href="https://arvpinto.github.io/test/residue_deletion.html" target="_blank">I - Input Preparation section of the residue deletion protocol.</a>
 
 Open the system in VMD, save a *.gro file and a serial_numbers.dat file with the serial numbers of a selection:
 <pre style="color: white; background-color: black;">
@@ -43,7 +43,7 @@ user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+
 
 <br/>
 
-Then the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a>mol2_vmd-qmsel.sh script can be used to extract the selection in the required format:
+Then the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
