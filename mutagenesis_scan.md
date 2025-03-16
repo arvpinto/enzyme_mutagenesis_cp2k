@@ -62,7 +62,7 @@ user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat 
 <br>
 
 <div align="center">
-    <img src="comparison_bar_plot.png">
+    <img src="mutagenesis_scan/comparison_bar_plot.png">
 </div>
 
 <br/>
