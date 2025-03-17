@@ -87,7 +87,7 @@ user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 <br>
 
 <div align="center">
-    <img src="bar_plot.png">
+    <img src="residue_deletion/bar_plot.png">
 </div>
 
 <br/>
@@ -105,7 +105,7 @@ user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684
 <br/>
 
 <div align="center">
-    <img src="marker_plot.png">
+    <img src="residue_deletion/marker_plot.png">
 </div>
 
 <br>
