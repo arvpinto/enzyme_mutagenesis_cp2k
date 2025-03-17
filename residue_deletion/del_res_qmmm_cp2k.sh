@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+shopt -s expand_aliases
+source ~/.bashrc
+
 ### Check if usage is correct
 if [ $# -ne 6 ]; then
     echo "Usage: ./del_res_qmmm_cp2k.sh <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
