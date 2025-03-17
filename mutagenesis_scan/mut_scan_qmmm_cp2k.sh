@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PYMOL_PATH='/usr/bin/pymol'
+shopt -s expand_aliases
+source ~/.bashrc
 
 ### Check if the usage is correct
 if [ $# -ne 9 ]; then
@@ -89,11 +90,11 @@ for i in $(cat $res_list); do
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(resi '"$i"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
-	$PYMOL_PATH -d "load "$scan_type"_"$i".prmtop, mysystem ;load "$scan_type"_"$i"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
+	pymol -d "load "$scan_type"_"$i".prmtop, mysystem ;load "$scan_type"_"$i"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
 	### Prepare the CP2K QMMM section input with the vmd_forceeval.tcl script
-	res_name=$(cpptraj "$scan_type"_"$i".prmtop --resmask :"$i" | tail -n 1 | awk '{print $2}')
+	res_name=$(cpptraj -p "$scan_type"_"$i".prmtop --resmask :"$i" | tail -n 1 | awk '{print $2}')
 	sed 's/resname '"$res_name"' and resid '"$i"'/resname '"$scan_type"' and resid '"$i"'/' ../$qm_selection > $qm_selection
 	vmd "$scan_type"_"$i".prmtop "$scan_type"_"$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > ../vmd.log 2>&1
 

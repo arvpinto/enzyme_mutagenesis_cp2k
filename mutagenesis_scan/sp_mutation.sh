@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PYMOL_PATH='/usr/bin/pymol'
+shopt -s expand_aliases
+source ~/.bashrc
 
 # Check if the usage is correct
 if [ $# -ne 7 ]; then
@@ -65,8 +66,8 @@ echo "quit" >> pymol_mut_r.pml
 echo "quit" >> pymol_mut_ts.pml
 
 ### Run PYMOL to generate mutated structures
-$PYMOL_PATH stripped_"$r_structure".pdb -c -e pymol_mut_r.pml >> ../pymol.log 2>&1
-$PYMOL_PATH stripped_"$ts_structure".pdb -c -e pymol_mut_ts.pml >> ../pymol.log 2>&1
+pymol stripped_"$r_structure".pdb -cq pymol_mut_r.pml >> ../pymol.log 2>&1
+pymol stripped_"$ts_structure".pdb -cq pymol_mut_ts.pml >> ../pymol.log 2>&1
 
 ### Change protonation states back to the intended
 if [ "$res_type" = "ASH" ]; then
