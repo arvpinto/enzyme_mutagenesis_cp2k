@@ -1,5 +1,4 @@
-
-
+<br>
 
 <h2><p align="center"> <b>Residue Deletion</b> </p> </h2>
 
