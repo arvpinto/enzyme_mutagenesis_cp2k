@@ -65,9 +65,10 @@ for i in $(cat $res_list); do
         sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' res_del_"$ts_structure".inp	
 
 	### Replace TAG's in CP2K inputs
-        sed -i 's/STATE_TAG/res_'"$i"'_'"$r_structure"'.pdb/g' res_del_"$r_structure".inp
-        sed -i 's/STATE_TAG/res_'"$i"'_'"$ts_structure"'.pdb/g' res_del_"$ts_structure".inp
-        sed -i 's/PRMTOP_TAG/res_'"$i"'.prmtop/g' res_del_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$r_structure"'.pdb/g' res_del_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$ts_structure"'.pdb/g' res_del_"$ts_structure".inp
+        sed -i 's/PARM_FILE_NAME/PARM_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
+	sed -i 's/CONN_FILE_NAME/CONN_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
 
 	### Clean up
 	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat
