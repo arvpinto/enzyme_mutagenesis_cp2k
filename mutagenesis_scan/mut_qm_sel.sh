@@ -14,12 +14,14 @@ res_num="$1"
 res_type="$2"
 topology="$3"
 qm_selection="$4"
+
 ### Set backbone and sidechain variables for QM layer check
 res_sel=""
 bb_found=true
 sc_found=true
 bb_atoms_found=()
 sc_atoms_not_found=()
+
 ### Extract backbone and sidechain information regarding the WT and mutation residues
 res_name=$(cpptraj -p ../"$topology" --resmask :"$res_num" | tail -n 1 | awk '{print $2}')
 bb_atoms_wt=$(cpptraj -p ../"$topology" --mask :"$res_num"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
