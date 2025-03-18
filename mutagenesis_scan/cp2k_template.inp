@@ -58,7 +58,7 @@
             EI_SCALE14 0.8333
             VDW_SCALE14 0.5000
             PARMTYPE AMBER
-            PARM_FILE_NAME PRMTOP_TAG 
+            PARM_FILE_NAME hpla2.prmtop 
             &SPLINE
                 EMAX_SPLINE 1.0E8
                 RCUT_NB [angstrom] 10
@@ -95,9 +95,9 @@
 
         &TOPOLOGY
             COORD_FILE_FORMAT CRD
-            COORD_FILE_NAME STATE_TAG
+            COORD_FILE_NAME R.pdb
 	    CONN_FILE_FORMAT AMBER
-            CONN_FILE_NAME PRMTOP_TAG
+            CONN_FILE_NAME hpla2.prmtop
         &END TOPOLOGY
         &KIND Na+
             ELEMENT Na
