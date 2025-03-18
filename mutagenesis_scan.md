@@ -29,7 +29,13 @@ user@machine:~$ ./mut_scan_qmmm_cp2k.sh &lt;residue_list&gt; &lt;scan_type&gt; &
 user@machine:~$ ./sp_mutation.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt;
 </pre>
 
-<p align="justify">Since mutating residues changes the atom numbering, the QM/MM settings must be updated for each mutation. The <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file is used to produce geometry optimization and a single-point point energy input files.</p>
+<p align="justify">Since mutating residues changes the atom numbering, the QM/MM settings must be updated for each mutation. The <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/mut_qm_sel.sh" target="_blank">mut_qm_sel.sh</a> script checks how the mutated residue should be included in the QM layer and modifies the qm_selection.dat file accordingly. It has the following usage:</p>
+
+<pre style="color: white; background-color: black;">
+user@machine:~$ ./mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;qm_selection&gt;
+</pre>
+    
+<p align="justify"><a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file is used to produce geometry optimization and a single-point point energy input files.</p>
 
 <br/>
 
