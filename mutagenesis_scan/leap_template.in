@@ -2,7 +2,7 @@ source leaprc.protein.ff14SB
 source leaprc.gaff2
 source leaprc.water.tip3p
 
-m = loadpdb PDB_TAG.pdb
+m = loadpdb R.pdb
 
 bond m.59.SG m.83.SG
 bond m.77.SG m.88.SG
@@ -12,7 +12,7 @@ bond m.43.SG m.97.SG
 bond m.44.SG m.28.SG
 bond m.26.SG m.117.SG
 
-saveamberparm m PDB_TAG.prmtop PDB_TAG.rst7
+saveamberparm m R.prmtop R.rst7
 
 quit
 
