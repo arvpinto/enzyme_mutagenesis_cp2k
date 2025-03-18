@@ -101,8 +101,10 @@ done
 ### Prepare leap inputs from template 
 cp ../"$leap_input" ./leap_"$mut_name"_r.in
 cp ../"$leap_input" ./leap_"$mut_name"_ts.in
-sed -i 's/PDB_TAG/'"$mut_name"'_'"$r_structure"'/g' leap_"$mut_name"_r.in
-sed -i 's/PDB_TAG/'"$mut_name"'_'"$ts_structure"'/g' leap_"$mut_name"_ts.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$r_structure"'.pdb/g' leap_"$res_type"_r.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$res_type"_ts.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$res_type"_r.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$res_type"_ts.in
 
 ### Run leap inputs to generate topologies
 tleap -f leap_"$mut_name"_r.in >> ../leap.log 2>&1
