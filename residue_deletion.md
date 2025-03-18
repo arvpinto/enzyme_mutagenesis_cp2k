@@ -42,19 +42,19 @@ user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+
 
 <br/>
 
-Then the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
+Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
 
 <br/>
 
-The <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
+The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
 </pre>
-<p align="justify"> It prepares a directory for each residue in the list where the input files for CP2K will be output. The supplied topology and structures will be processed through CPPTRAJ to delete each of the specified residues. Since deleting residues changes the atom numbering, the QM/MM settings must be updated for each deletion. The <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file must have tags (PRMTOP_TAG and STATE_TAG) placed in the right places. </p>
+<p align="justify"> It prepares a directory for each residue in the list where the input files for CP2K will be output. The supplied topology and structures will be processed through CPPTRAJ to delete each of the specified residues. Since deleting residues changes the atom numbering, the QM/MM settings must be updated for each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file must have tags (PRMTOP_TAG and STATE_TAG) placed in the right places. </p>
 
 <br/>
 
@@ -77,7 +77,7 @@ user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(
 
 <br/>
 
-The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
+The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
@@ -95,7 +95,7 @@ user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 
 <br>
 
-For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_ts_deletion_cp2k/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:
+For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1982 34854
