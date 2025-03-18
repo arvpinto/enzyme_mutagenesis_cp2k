@@ -3,7 +3,7 @@
 <p align="justify"> The protocols consist of residue deletion (where residues are completely removed from the system), mutagenesis scan (where residues are mutated to a specific residue and their geometry is optimized, e.g. alanine scanning), and multipoint mutant mutagenesis (where several mutations may be introduced and they are submitted to molecular dynamics and geometry optimization procedures). The protocols require the PDB structures of the reactant and transition state geometries of a given reaction and the respective *prmtop topology file (see <a href="https://arvpinto.github.io/enzyme_neb_cp2k" target="_blank">Tutorial for Transition State (TS) searches of Enzymatic Reaction Mechanisms using QM/MM methods in CP2K</a>). Other files are also required but there's an explanation on how to obtain them or they are given as samples in the repository. The scripts employed in the protocols require the availability of software such as VMD, PyMOL, Ambertools and ParmEd. The scripts produce input files that can be directly run in CP2K, thus providing pipelines to automatized these analyses.
 <br>
 <br>
-The protocols can be downloaded from here <a href="https://github.com/arvpinto/test/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>, and the included scripts have to be given executable permissions with 'chmod +x'.
+The protocols can be downloaded from here <a href="https://github.com/arvpinto/test/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>, and the included bash scripts have to be given executable permissions with 'chmod +x'.
 </p>
 <br>
 
