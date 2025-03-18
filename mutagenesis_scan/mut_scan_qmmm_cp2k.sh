@@ -76,9 +76,10 @@ for i in $(cat $res_list); do
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp
         sed -i 's/MUT_SCAN/MUT_SCAN_'"$r_structure"'/' scan_res_"$r_structure".inp
         sed -i 's/MUT_SCAN/MUT_SCAN_'"$ts_structure"'/' scan_res_"$ts_structure".inp
-        sed -i 's/STATE_TAG/'"$scan_type"'_'"$i"'_'"$r_structure"'.rst7/g' opt_res_"$r_structure".inp
-        sed -i 's/STATE_TAG/'"$scan_type"'_'"$i"'_'"$ts_structure"'.rst7/g' opt_res_"$ts_structure".inp
-        sed -i 's/PRMTOP_TAG/'"$scan_type"'_'"$i"'.prmtop/g' *_res_*.inp
+	sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$i"'_'"$r_structure"'.rst7/g' opt_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$i"'_'"$ts_structure"'.rst7/g' opt_res_"$ts_structure".inp
+        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$scan_type"'_'"$i"'.prmtop/g' *_res_*.inp
+        sed -i 's/CONN_FILE_NAME.*/PARM_FILE_NAME '"$scan_type"'_'"$i"'.prmtop/g' *_res_*.inp
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$r_structure"'-1.restart/' scan_extrest_"$r_structure".inc
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$ts_structure"'-1.restart/' scan_extrest_"$ts_structure".inc
         echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$r_structure".inp
