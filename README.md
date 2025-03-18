@@ -6,7 +6,6 @@
 The protocols can be downloaded from here <a href="https://github.com/arvpinto/test/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>, and the included scripts have to be given executable permissions with 'chmod +x'.
 </p>
 <br>
-<br>
 
 Some of these approaches have been employed in:
 <p><a href="https://doi.org/10.1021/acscatal.1c02444" target="_blank">Reaction Mechanism of MHETase, a PET Degrading Enzyme</a></p>
