@@ -93,9 +93,87 @@ for i in $(cat $res_list); do
 	pymol -d "load "$scan_type"_"$i".prmtop, mysystem ;load "$scan_type"_"$i"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
-	### Prepare the CP2K QMMM section input with the vmd_forceeval.tcl script
-	res_name=$(cpptraj -p "$scan_type"_"$i".prmtop --resmask :"$i" | tail -n 1 | awk '{print $2}')
-	sed 's/resname '"$res_name"' and resid '"$i"'/resname '"$scan_type"' and resid '"$i"'/' ../$qm_selection > $qm_selection
+	### Extract backbone and sidechain information regarding the WT and mutation residues
+	res_name=$(cpptraj -p ../"$topology" --resmask :"$i" | tail -n 1 | awk '{print $2}')
+	bb_atoms_wt=$(cpptraj -p ../"$topology" --mask :"$i"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
+	if [ "$res_name" != "GLY" ]; then
+		sc_atoms_wt=$(cpptraj -p ../"$topology" --mask ":"$i"&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3)" | tail -n +2 |  awk '{print $2}')
+	fi
+	atom_names_wt=$(grep -o '(name[^)]*resname '"$res_name"' and resid '"$i"'[^)]*)' ../"$qm_selection" | sed -E 's/\(name ([^)]*)and resname '"$res_name"' and resid '"$i"'\)/\1/')	
+	bb_atoms_mut=$(cpptraj -p "$scan_type"_"$i".prmtop --mask :"$i"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
+	if [ "$scan_type" != "GLY" ]; then
+		sc_atoms_mut=$(cpptraj -p "$scan_type"_"$i".prmtop --mask ":"$i"&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3)" | tail -n +2 |  awk '{print $2}')
+	fi
+
+	### Set backbone and sidechain variables for QM layer check	
+	bb_found=true
+	sc_found=true
+	bb_atoms_found=()
+	sc_atoms_not_found=()
+
+	### Check if backbone is completely inserted in the QM layer
+	for atom in $bb_atoms_wt; do
+		if [[ " ${atom_names_wt[@]} " =~ " $atom " ]]; then
+			bb_atoms_found+=("$atom")
+		else
+			bb_found=false
+		fi
+	done
+
+	### Check if sidechain is completely inserted in the QM layer
+	for atom in $sc_atoms_wt; do
+                if [[ ! " ${atom_names_wt[@]} " =~ " $atom " ]]; then
+                        sc_found=false
+			sc_atoms_not_found=()
+                fi
+        done
+
+	### Insert full mutation backbone if WT backbone is completely inserted in the QM layer
+	if $bb_found; then
+		### The backbone of GLY and PRO is considered as the full residue
+		if [ "$scan_type" == "GLY" ] || [ "$scan_type" == "PRO" ]; then
+			res_sel="$(echo "$bb_atoms_mut" "$sc_atoms_mut")"
+		else
+			res_sel="$(echo "$bb_atoms_mut")"
+		fi
+	else	### Insert sub
+		if [ "$scan_type" == "GLY" ] || [ "$scan_type" == "PRO" ]; then
+			if [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
+				res_sel=" C O "
+			else
+				if [ "$scan_type" == "GLY" ]; then
+					res_sel=" N H HA2 HA3 CA "
+				else
+					res_sel=" N CD HD2 HD3 CG HG2 HG3 CB HB2 HB3 CA HA "
+				fi
+			fi
+		else
+			res_sel="$(echo ${bb_atoms_found[*]})"	
+		fi
+	fi
+
+	if $sc_found; then
+		if [ "$scan_type" == "GLY" ] || [ "$scan_type" == "PRO" ]; then
+			res_sel+=""
+		else
+                	res_sel+="$(echo " $sc_atoms_mut")"
+        	fi
+        else
+		if [ -n "${sc_atoms_not_found[*]}" ]; then
+			if [ "$scan_type" == "GLY" ] || [ "$scan_type" == "PRO" ]; then
+				res_sel+=""
+			else
+				res_sel+=$(echo $sc_atoms_mut | grep -oE '\w+' | grep -vwE "$(echo ${sc_atoms_not_found[*]} | sed 's/ /|/g')" | tr '\n' ' ')
+			fi
+		fi
+        fi
+
+	grep -o '([^)]*)' ../"$qm_selection" | grep -v '(name[^)]*resname '"$res_name"' and resid '"$i"'[^)]*)' | tr '\n' ' ' | sed 's/) (/) or (/g' > $qm_selection
+
+	if [ -n "$(echo "$res_sel" | xargs)" ]; then		
+		echo -n "or (name "$res_sel" and resname "$scan_type" and resid "$i")" >> $qm_selection
+	fi
+
 	vmd "$scan_type"_"$i".prmtop "$scan_type"_"$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > ../vmd.log 2>&1
 
 	### Change the QM charge of the input
