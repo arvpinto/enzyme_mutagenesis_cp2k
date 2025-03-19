@@ -107,11 +107,13 @@ echo "import parmed as pmd" >> parmed_join.py
 echo "parm1 = pmd.load_file('"$res_type"_"$res_num"_"$r_structure".prmtop', '"$res_type"_"$res_num"_"$r_structure".rst7')" >> parmed_join.py
 echo "parm2 = pmd.load_file('"$res_type"_"$res_num"_"$ts_structure".prmtop', '"$res_type"_"$res_num"_"$ts_structure".rst7')" >> parmed_join.py
 echo "parm3 = pmd.load_file('../"$topology"', '../"$r_structure".pdb')" >> parmed_join.py
+echo "parm4 = pmd.load_file('../"$topology"', '../"$ts_structure".pdb')" >> parmed_join.py
 echo "parm3.strip('$selection')" >> parmed_join.py
+echo "parm4.strip('$selection')" >> parmed_join.py
 echo "joined1 = parm1 + parm3" >> parmed_join.py
 echo "joined1.save('"$res_type"_"$res_num".prmtop', overwrite=True)" >> parmed_join.py
 echo "joined1.save('"$res_type"_"$res_num"_"$r_structure".rst7', overwrite=True)" >> parmed_join.py
-echo "joined2 = parm2 + parm3" >> parmed_join.py
+echo "joined2 = parm2 + parm4" >> parmed_join.py
 echo "joined2.save('"$res_type"_"$res_num"_"$ts_structure".rst7', overwrite=True)" >> parmed_join.py
 
 ### Run PARMED to generate merged topologies
