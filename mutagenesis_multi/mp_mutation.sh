@@ -106,6 +106,14 @@ sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$
 sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$res_type"_r.in
 sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$res_type"_ts.in
 
+### If CYX is mutated, the other CYX from the bridge is changed to CYS
+cys_pair=$(grep "."$res_num".SG" leap_"$res_type"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
+if [[ -n "$cys_pair" ]]; then
+	echo -e "trajin "$res_type"_"$res_num"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$r_structure".pdb
+	echo -e "trajin "$res_type"_"$res_num"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$ts_structure".pdb
+	sed -i '/.'"$res_num"'.SG/d' leap_"$res_type"_*.in
+fi
+
 ### Run leap inputs to generate topologies
 tleap -f leap_"$mut_name"_r.in >> ../leap.log 2>&1
 tleap -f leap_"$mut_name"_ts.in >> ../leap.log 2>&1
