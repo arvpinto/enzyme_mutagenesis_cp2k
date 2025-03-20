@@ -190,6 +190,6 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 done
 
 ### Clean up
-rm motion_md.inc motion_opt.inc opt_extrest.inc sp_extrest.inc
+rm motion_md.inc motion_opt.inc opt_extrest.inc sp_extrest.inc res_list.dat
 
 echo ""
