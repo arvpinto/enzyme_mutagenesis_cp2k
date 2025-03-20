@@ -24,7 +24,7 @@ def plot_data(labels, values1, values2, filename1, filename2):
 
     # Define colors for both datasets
     colors1 = ['salmon' if v < wt else 'tomato' for v in values1]
-    colors2 = ['turquoise' if v < wt else 'royalblue' for v in values2]
+    colors2 = ['cornflowerblue' if v < wt else 'royalblue' for v in values2]
 
     # Plot bars side by side
     plt.bar(x_positions - bar_width/2, values1, width=bar_width, color=colors1, label=filename1)
