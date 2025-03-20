@@ -52,7 +52,6 @@ done
 
 ### Insert full mutation backbone if WT backbone is completely inserted in the QM layer
 if $bb_found; then
-	echo "OK BB"
         ### The backbone of GLY and PRO is considered as the full residue
         if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
                 res_sel="$(echo "$bb_atoms_mut" "$sc_atoms_mut")"
@@ -60,7 +59,6 @@ if $bb_found; then
                 res_sel="$(echo "$bb_atoms_mut")"
         fi
 else    ### Insert subset of atoms if backbone is incomplete in the QM layer
-	echo "NOT_OK_BB"
         ### GLY and PRO are handled differently to ensure a consistent QMMM layer when they are involved
         if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
 
@@ -81,7 +79,6 @@ fi
 
 ### Insert full mutation sidechain if WT sidechain is completely inserted in the QM layer
 if $sc_found; then
-	echo "OK SC"
         ### GLY and PRO have already been processed
         if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
                 res_sel+=""
