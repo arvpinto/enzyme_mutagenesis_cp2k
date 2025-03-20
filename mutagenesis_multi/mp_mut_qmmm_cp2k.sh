@@ -4,21 +4,21 @@ shopt -s expand_aliases
 source ~/.bashrc
 
 ### Check if the usage is correct
-if [ $# -ne 9 ]; then
-    echo "Usage: ./mp_mut_qmmm_cp2k.sh <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection>"
+if [ $# -ne 8 ] && [ $# -ne 9 ]; then
+    echo "Usage: ./mp_mut_qmmm_cp2k.sh <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <free_residues>"
     exit 1 
 fi
 
 ### Variables list
 mut_list="$1"
-scan_type="$2"
-topology="$3"
-r_structure=$(echo "$4" | sed 's/.pdb//')
-ts_structure=$(echo "$5" | sed 's/.pdb//')
-selection="$6"
-leap_input="$7"
-cp2k_input="$8"
-qm_selection="$9"
+topology="$2"
+r_structure=$(echo "$3" | sed 's/.pdb//')
+ts_structure=$(echo "$4" | sed 's/.pdb//')
+selection="$5"
+leap_input="$6"
+cp2k_input="$7"
+qm_selection="$8"
+free_residues="$9"
 
 ### Create CP2K section for molecular dynamics
 cat <<EOF > motion_md.inc
@@ -95,20 +95,22 @@ RESTART_CELL .TRUE.
 EOF
 
 ### Print progress bar
-total=$(cat $res_list | wc -l) ; printf "\rProgress: [%-50s] %d/%d" " " 0 $total
+total=$(cat $mut_list | wc -l) ; printf "\rProgress: [%-50s] %d/%d" " " 0 $total
 counter=0
 
 ### Loop through each mutant
 for i in $(cat $mut_list | awk '{print $1}'); do
         ((counter++))
 
-	grep "$i" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g' > residue_list.dat
+	res_list=$(grep "$i" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
+	echo "$res_list" > res_list.dat
+	free_list=$(grep "$i" $free_residues | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 
 	### Run the sp_mutation.sh script to create the mutated topology and coordinates	
-	./mp_mutation.sh "$i" residue_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
+	./mp_mutation.sh "$i" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
 	### Transfer the CP2K template and section inputs to the mutant directory
-	sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' $cp2k_input > "$i"/md_res_"$r_structure".inp
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed '/BASIS_SET/{x;d;};x' | sed '/POTENTIAL/{n;d;}' | sed '/BASIS_SET/d' | sed '/POTENTIAL/d' > "$i"/md_res_"$r_structure".inp
 	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/opt_res_"$r_structure".inp
 	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/sp_res_"$r_structure".inp
 	cp "$i"/md_res_"$r_structure".inp "$i"/md_res_"$ts_structure".inp
@@ -130,8 +132,8 @@ for i in $(cat $mut_list | awk '{print $1}'); do
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp 
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$r_structure"'/' sp_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$ts_structure"'/' sp_res_"$ts_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/'"$i"'_'"$r_structure"'.rst7/g' md_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/'"$i"'_'"$ts_structure"'.rst7/g' md_res_"$ts_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$r_structure"'.rst7/g' md_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$ts_structure"'.rst7/g' md_res_"$ts_structure".inp
 	sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$i"'.prmtop/g' *_res_*.inp
 	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$i"'.prmtop/g' *_res_*.inp
 	sed -i 's/MUT_SCAN/MUT_SCAN_MD_'"$r_structure"'-1.restart/' opt_extrest_"$r_structure".inc
@@ -142,24 +144,34 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 	echo -e "\n@INCLUDE motion_md.inc" >> md_res_"$ts_structure".inp
 	echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$r_structure".inp
 	echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$ts_structure".inp
+	echo -e "\n@INCLUDE opt_extrest_"$r_structure".inc" >> opt_res_"$r_structure".inp
+        echo -e "\n@INCLUDE opt_extrest_"$ts_structure".inc" >> opt_res_"$ts_structure".inp
 	echo -e "\n@INCLUDE sp_extrest_"$r_structure".inc" >> sp_res_"$r_structure".inp
 	echo -e "\n@INCLUDE sp_extrest_"$ts_structure".inc" >> sp_res_"$ts_structure".inp
 
 	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
-	echo 'cmd.iterate("!(resi '"$(sed 's/[^0-9]//g' ../residue_list.dat | tr '\n' '+')"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
+	echo 'cmd.iterate("!(resi '"$(echo "$res_list" "$free_list" | sed 's/[^0-9]//g' | tr '\n' '+')"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
 	pymol -d "load "$i".prmtop, mysystem ;load "$i"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
+        ### Check if any residue belongs in the QM layer
+	cp ../$qm_selection ./
+	for res in $res_list; do 
+		res_num=$(echo "$res" | sed 's/[^0-9]//g')
+		res_type=$(echo "$res" | sed 's/[^a-zA-Z]//g')
+        	if grep -q "resid $res_num)" $qm_selection; then
+			### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
+			../mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$i".prmtop "$qm_selection"	
+        	fi
 
-	### THIS IS NOT WELL DONE
-	### Prepare the CP2K QMMM section input with the vmd_forceeval.tcl script
-	res_name=$(cpptraj -p "$i".prmtop --resmask :"$i" | tail -n 1 | awk '{print $2}')
-	sed 's/resname '"$res_name"' and resid '"$i"'/resname '"$scan_type"' and resid '"$i"'/' ../$qm_selection > $qm_selection
-	vmd "$scan_type"_"$i".prmtop "$scan_type"_"$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > ../vmd.log 2>&1
+	done
 
-	### Change the QM charge of the input
+        ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
+        vmd "$scan_type"_"$i".prmtop "$scan_type"_"$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > ../vmd.log 2>&1
+
+        ### Change the QM charge of the input
         qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
         sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' *_res_*.inp
 

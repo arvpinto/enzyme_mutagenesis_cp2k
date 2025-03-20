@@ -101,17 +101,17 @@ done
 ### Prepare leap inputs from template 
 cp ../"$leap_input" ./leap_"$mut_name"_r.in
 cp ../"$leap_input" ./leap_"$mut_name"_ts.in
-sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$r_structure"'.pdb/g' leap_"$res_type"_r.in
-sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$res_type"_ts.in
-sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$res_type"_r.in
-sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$res_type"_ts.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$r_structure"'.pdb/g' leap_"$mut_name"_r.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$mut_name"_ts.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$mut_name"_r.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$mut_name"_ts.in
 
 ### If CYX is mutated, the other CYX from the bridge is changed to CYS
-cys_pair=$(grep "."$res_num".SG" leap_"$res_type"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
+cys_pair=$(grep "."$res_num".SG" leap_"$mut_name"_r.in | sed 's/.'"$mut_name"'.SG//g' | sed 's/[^0-9]//g')
 if [[ -n "$cys_pair" ]]; then
-	echo -e "trajin "$res_type"_"$res_num"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$r_structure".pdb
-	echo -e "trajin "$res_type"_"$res_num"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$ts_structure".pdb
-	sed -i '/.'"$res_num"'.SG/d' leap_"$res_type"_*.in
+	echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
+	echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
+	sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
 fi
 
 ### Run leap inputs to generate topologies
@@ -126,6 +126,7 @@ echo "parm2 = pmd.load_file('"$mut_name"_"$ts_structure".prmtop', '"$mut_name"_"
 echo "parm3 = pmd.load_file('../"$topology"', '../"$r_structure".pdb')" >> parmed_join.py
 echo "parm4 = pmd.load_file('../"$topology"', '../"$ts_structure".pdb')" >> parmed_join.py
 echo "parm3.strip('$selection')" >> parmed_join.py
+echo "parm4.strip('$selection')" >> parmed_join.py
 echo "joined1 = parm1 + parm3" >> parmed_join.py
 echo "joined1.save('"$mut_name".prmtop', overwrite=True)" >> parmed_join.py
 echo "joined1.save('"$mut_name"_"$r_structure".rst7', overwrite=True)" >> parmed_join.py
