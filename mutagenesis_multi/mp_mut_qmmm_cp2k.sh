@@ -76,6 +76,7 @@ RMS_FORCE 3.0E-04
 &END MOTION
 EOF
 
+### Create CP2K sections for restarting of the optimization and single-point calculations
 cat <<EOF > opt_extrest.inc
 &EXT_RESTART
 RESTART_FILE_NAME MUT_SCAN
@@ -101,15 +102,15 @@ counter=0
 ### Loop through each mutant
 for i in $(cat $mut_list | awk '{print $1}'); do
         ((counter++))
-
+	
+	### Get list of mutations
 	res_list=$(grep "$i" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 	echo "$res_list" > res_list.dat
-	free_list=$(grep "$i" $free_residues | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 
-	### Run the sp_mutation.sh script to create the mutated topology and coordinates	
+	### Run the mp_mutation.sh script to create the mutated topology and coordinates	
 	./mp_mutation.sh "$i" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
-	### Transfer the CP2K template and section inputs to the mutant directory
+	### Transfer the CP2K template and section inputs to the mutant directory 
 	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed '/BASIS_SET/{x;d;};x' | sed '/POTENTIAL/{n;d;}' | sed '/BASIS_SET/d' | sed '/POTENTIAL/d' > "$i"/md_res_"$r_structure".inp
 	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/opt_res_"$r_structure".inp
 	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/sp_res_"$r_structure".inp
@@ -149,7 +150,8 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 	echo -e "\n@INCLUDE sp_extrest_"$r_structure".inc" >> sp_res_"$r_structure".inp
 	echo -e "\n@INCLUDE sp_extrest_"$ts_structure".inc" >> sp_res_"$ts_structure".inp
 
-	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant
+	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant and the residues specified
+	free_list=$(grep "$i" $free_residues | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(resi '"$(echo "$res_list" "$free_list" | sed 's/[^0-9]//g' | tr '\n' '+')"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
@@ -186,6 +188,6 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 done
 
 ### Clean up
-rm motion_opt.inc scan_extrest.inc
+rm motion_md.inc motion_opt.inc opt_extrest.inc sp_extrest.inc
 
 echo ""
