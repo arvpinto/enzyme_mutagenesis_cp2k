@@ -61,7 +61,7 @@ user@machine:~$ paste <(for i in ALA_*; do echo "$i" | sed 's/ALA_//g'; done) <(
 <p align="justify">The energy barriers can be compared to the ones calculated with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" target="_blank">residue deletion protocol</a> using the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan/E_diff_comparison_bar_plot.py" target="_blank">E_diff_comparison_bar_plot.py</a> script:</p>
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat energy_differences_mut.dat
+user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat energy_differences_mut_gly.dat
 </pre>
 
 <br>
