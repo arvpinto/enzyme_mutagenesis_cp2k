@@ -100,11 +100,10 @@ for i in $(cat $res_list); do
         awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
         ### Check if residue belongs in the QM layer
-        if grep -q "resid $i)" ../$qm_selection; then
+	cp ../$qm_selection ./
+	if grep -q "resid $i)" ../$qm_selection; then
 		### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-		../mut_qm_sel.sh "$i" "$scan_type" "$topology" "$qm_selection"	
-        else
-                cp ../$qm_selection ./
+		../mut_qm_sel.sh "$i" "$scan_type" "$topology" "$scan_type"_"$i".prmtop "$qm_selection"	
         fi
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
