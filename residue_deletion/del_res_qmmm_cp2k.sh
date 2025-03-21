@@ -41,8 +41,8 @@ for i in $(cat $res_list); do
         cp ../cpptraj_del.in cpptraj_del_"$r_structure".in
 	sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in 	
         cp ../cpptraj_del.in cpptraj_del_"$ts_structure".in
-        cp ../$cp2k_input res_del_"$r_structure".inp
-        cp ../$cp2k_input res_del_"$ts_structure".inp
+        cp ../$cp2k_input del_res_"$r_structure".inp
+        cp ../$cp2k_input del_res_"$ts_structure".inp
 
  	### Replace TAG's in CPPTRAJ inputs
 	sed -i 's/PRMTOP_TAG/'"$topology"'/g' cpptraj_del_*.in
@@ -61,14 +61,14 @@ for i in $(cat $res_list); do
 
  	### Get QM charge and replace in the CP2K inputs
 	qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
-	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' res_del_"$r_structure".inp
-        sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' res_del_"$ts_structure".inp	
+	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_"$r_structure".inp
+        sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_"$ts_structure".inp	
 
 	### Replace TAG's in CP2K inputs
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$r_structure"'.pdb/g' res_del_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$ts_structure"'.pdb/g' res_del_"$ts_structure".inp
-        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
-	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$r_structure"'.pdb/g' del_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$ts_structure"'.pdb/g' del_res_"$ts_structure".inp
+        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
+	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
 
 	### Clean up
 	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat
