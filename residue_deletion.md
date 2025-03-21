@@ -3,11 +3,11 @@
 
 <h2><p align="center"> <b>Residue Deletion</b> </p> </h2>
 
-<p align="justify"><b>This protocol aims to assess the energy contribution of individual amino acid residues to the energy barrier of a specified reaction. This is accomplished by performing single-point calculations on both the reactant and transition state structures, each with a specific residue omitted.</b>
+<p align="justify"><b>This protocol aims to assess the energy contribution of individual amino acid residues to the energy barrier of a specified reaction. This is accomplished by performing single-point calculations on both the reactant and transition state structures, each with a specific residue omitted.</b></p>
 
 <b>The protocol requires the following inputs:</b>
 <br>
-<p>● File listing the residues to be deleted</p>
+● File listing the residues to be deleted
 <br>
 ● Topology file in *prmtop format
 <br>
