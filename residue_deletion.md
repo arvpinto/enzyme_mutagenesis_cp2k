@@ -1,3 +1,7 @@
+---
+title: Residue Deletion
+image: /assets/img/res_del_img.png
+---
 <br>
 
 <h2><p align="center"> <b>Residue Deletion</b> </p> </h2>
