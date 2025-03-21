@@ -3,9 +3,22 @@
 
 <h2><p align="center"> <b>Residue Deletion</b> </p> </h2>
 
-<p align="justify"><b>This protocol is designed to calculate the energy contribution of amino acid residues to the energy barrier of a given reaction. This can be achieved by performing single-point calculations on the provided reactant and transition state structures, each with the specified residue deleted. </b></p>
+<p align="justify"><b>This protocol aims to assess the energy contribution of individual amino acid residues to the energy barrier of a specified reaction. This is accomplished by performing single-point calculations on both the reactant and transition state structures, each with a specific residue omitted.
 
-<p align="justify"> It requires a file with a list of residues to be deleted, a *prmtop file, reactant and transition state structures in the *pdb format, a CP2K input template and a selection of the QM region. The following packages are also required: CP2K, VMD and CPPTRAJ (AmberTools). </p>
+</b></p>
+
+<p align="justify"> The protocol requires the following inputs:
+
+A file listing the residues to be deleted
+A *prmtop file
+Reactant and transition state structures in *pdb format
+A CP2K input template
+A selection of the quantum mechanical (QM) region
+Additionally, the following software packages are needed:
+
+CP2K
+VMD
+CPPTRAJ (from AmberTools) </p>
 
 ---
 
