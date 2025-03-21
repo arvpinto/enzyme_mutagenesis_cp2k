@@ -45,7 +45,7 @@ user@machine:~$ for i in ALA_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_r
 </pre>
 
 <div align="center">
-    <img src="assets/img/mut_multi_md.gif" width="300">
+    <img src="assets/img/mut_multi_md.gif" width="500">
 </div>
 
 <br/>
