@@ -26,7 +26,6 @@
 <br>
 ● CPPTRAJ (from AmberTools) 
 <br>
-</p>
 ---
 
 <br>
