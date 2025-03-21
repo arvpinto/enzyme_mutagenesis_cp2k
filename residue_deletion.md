@@ -5,7 +5,7 @@
 
 <p align="justify"><b>This protocol aims to assess the energy contribution of individual amino acid residues to the energy barrier of a specified reaction. This is accomplished by performing single-point calculations on both the reactant and transition state structures, each with a specific residue omitted.
 
-</b></p>
+</b>
 
 The protocol requires the following inputs:
 <br>
@@ -28,6 +28,7 @@ VMD
 <br>
 CPPTRAJ (from AmberTools) 
 <br>
+</p>
 ---
 
 <br>
