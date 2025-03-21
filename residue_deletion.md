@@ -1,6 +1,7 @@
 ---
 title: Residue Deletion
 image: /assets/img/res_del_img.png
+layout: default
 ---
 <br>
 
