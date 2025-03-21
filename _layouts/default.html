@@ -24,7 +24,8 @@
       <h2 class="project-name">{{ page.title | default: site.title | default: site.github.repository_name }}</h2>
       </div>
       <div class="header-right">
-      <img class="logo" src="assets/img/TS_DEL_RESIDUES.png" alt="biochem logo" width="1000" height="521" />
+      <img class="logo" src="{{ page.image | default: '/assets/img/TS_DEL_RESIDUES.png' }}" 
+         alt="biochem logo" width="1000" height="521" />
       </div>
       <div class="header-left">
       <h4>Alexandre V. Pinto, PhD Student</h4>
