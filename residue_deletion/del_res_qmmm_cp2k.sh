@@ -48,7 +48,7 @@ for i in $(cat $res_list); do
 			null_res+="$i "
 			sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
 		elif [ "$res_name" == "CYX" ]; then
-			cys_pair=$(echo "bondinfo :"$i"@SG" | cpptraj hpla2_ee.prmtop | grep "S   S" | awk '{print $4,$5}' | sed 's/:'"$i"'@SG//g')
+			cys_pair=$(echo "bondinfo :"$i"@SG" | cpptraj ../"$topology" | grep "S   S" | awk '{print $4,$5}' | sed 's/:'"$i"'@SG//g')
 			sed -i 's/strip :RES_TAG/strip :RES_TAG,'"$cys_pair"'\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 		fi
 		sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
