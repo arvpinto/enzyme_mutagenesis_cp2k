@@ -7,26 +7,24 @@
 
 <b>The protocol requires the following inputs:</b>
 <br>
+● File listing the residues to be deleted
 <br>
-A file listing the residues to be deleted
+● Topology file in *prmtop format
 <br>
-A *prmtop file
+● Reactant and transition state structures in *pdb format
 <br>
-Reactant and transition state structures in *pdb format
+● CP2K input template
 <br>
-A CP2K input template
-<br>
-A selection of the quantum mechanical (QM) region
+● Selection of the QM region
 <br>
 <br>
 <b>Additionally, the following software packages are needed:</b>
 <br>
+● CP2K
 <br>
-CP2K
+● VMD
 <br>
-VMD
-<br>
-CPPTRAJ (from AmberTools) 
+● CPPTRAJ (from AmberTools) 
 <br>
 </p>
 ---
