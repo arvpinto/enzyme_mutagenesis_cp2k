@@ -111,7 +111,7 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 	./mp_mutation.sh "$i" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
 	### Transfer the CP2K template and section inputs to the mutant directory 
-	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed '/BASIS_SET/{x;d;};x' | sed '/POTENTIAL/{n;d;}' | sed '/BASIS_SET/d' | sed '/POTENTIAL/d' > "$i"/md_res_"$r_structure".inp
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$i"/md_res_"$r_structure".inp
 	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/opt_res_"$r_structure".inp
 	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/sp_res_"$r_structure".inp
 	cp "$i"/md_res_"$r_structure".inp "$i"/md_res_"$ts_structure".inp
