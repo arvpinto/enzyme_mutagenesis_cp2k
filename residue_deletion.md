@@ -7,7 +7,7 @@
 
 </b></p>
 
-<p align="justify"> The protocol requires the following inputs:
+The protocol requires the following inputs:
 
 A file listing the residues to be deleted
 A *prmtop file
@@ -18,7 +18,7 @@ Additionally, the following software packages are needed:
 
 CP2K
 VMD
-CPPTRAJ (from AmberTools) </p>
+CPPTRAJ (from AmberTools) 
 
 ---
 
