@@ -49,9 +49,14 @@ for i in $(cat $res_list); do
 			sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
 		elif [ "$res_name" == "CYX" ]; then
 			cys_pair=$(echo "bondinfo :"$i"@SG" | cpptraj ../"$topology" | grep "S   S" | awk '{print $4,$5}' | sed 's/:'"$i"'@SG//g')
-			sed -i 's/strip :RES_TAG/strip :RES_TAG,'"$cys_pair"'\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+			if grep -q "resid $cys_pair)" ../$qm_selection; then
+				sed -i 's/strip :RES_TAG/strip :RES_TAG,'"$cys_pair"'\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+			else
+				sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+			fi
+		else
+			sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 		fi
-		sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 	else	
 		sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 	fi		
@@ -88,7 +93,7 @@ for i in $(cat $res_list); do
 	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
 
 	### Clean up
-	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in #qm_charge.dat
+	#rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in #qm_charge.dat
 
         cd ..
 
