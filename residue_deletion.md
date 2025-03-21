@@ -3,11 +3,10 @@
 
 <h2><p align="center"> <b>Residue Deletion</b> </p> </h2>
 
-<p align="justify"><b>This protocol aims to assess the energy contribution of individual amino acid residues to the energy barrier of a specified reaction. This is accomplished by performing single-point calculations on both the reactant and transition state structures, each with a specific residue omitted.
+<p align="justify"><b>This protocol aims to assess the energy contribution of individual amino acid residues to the energy barrier of a specified reaction. This is accomplished by performing single-point calculations on both the reactant and transition state structures, each with a specific residue omitted.</b>
 
-</b>
-
-The protocol requires the following inputs:
+<b>The protocol requires the following inputs:</b>
+<br>
 <br>
 A file listing the residues to be deleted
 <br>
@@ -20,7 +19,8 @@ A CP2K input template
 A selection of the quantum mechanical (QM) region
 <br>
 <br>
-Additionally, the following software packages are needed:
+<b>Additionally, the following software packages are needed:</b>
+<br>
 <br>
 CP2K
 <br>
