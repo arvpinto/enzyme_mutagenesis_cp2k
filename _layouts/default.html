@@ -24,14 +24,14 @@
       <h2 class="project-name">{{ page.title | default: site.title | default: site.github.repository_name }}</h2>
       </div>
       <div class="header-right">
-    {% assign image_map = "/assets/img/TS_DEL_RESIDUES.png" %}
+    {% assign image_map = "assets/img/TS_DEL_RESIDUES.png" %}
     
     {% if page.url contains 'residue_deletion' %}
         {% assign image_map = "assets/img/res_del_img.png" %}
     {% elsif page.url contains 'mutagenesis_scan' %}
-        {% assign image_map = "/assets/img/mutagenesis_scan.png" %}
+        {% assign image_map = "assets/img/mut_scan.png" %}
     {% elsif page.url contains 'mutagenesis_multi' %}
-        {% assign image_map = "/assets/img/mutagenesis_multi.png" %}
+        {% assign image_map = "assets/img/mut_multi.png" %}
     {% endif %}
 
     <img class="logo" src="{{ image_map }}" alt="biochem logo" width="1000" height="521" />
