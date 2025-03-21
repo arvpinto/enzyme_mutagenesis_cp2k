@@ -81,7 +81,7 @@ user@machine:~$ ./del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt
 
 The calculations can then be run using a for loop:
 <pre style="color: white; background-color: black;">
-user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i res_del_R.inp -o res_del_R.out ; cp2k.popt -i res_del_TS.inp -o res_del_TS.out ; cd .. ; done
+user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i del_res_R.inp -o del_res_R.out ; cp2k.popt -i del_res_TS.inp -o del_res_TS.out ; cd .. ; done
 </pre>
 
 <br/>
@@ -93,7 +93,7 @@ user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i res_del_R.inp -o res_d
 After running the single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue deletion:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/res_del_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/res_del_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_del.dat
+user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/del_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/del_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_del.dat
 </pre>
 
 <br/>
