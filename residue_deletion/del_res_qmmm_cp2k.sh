@@ -28,6 +28,7 @@ EOF
 ### Create progress bar
 total=$(cat $res_list | wc -l) ; printf "\rProgress: [%-50s] %d/%d" " " 0 $total
 counter=0
+null_res=""
 
 ### Loop through each residue in the list
 for i in $(cat $res_list); do
@@ -37,12 +38,28 @@ for i in $(cat $res_list); do
         mkdir RES_"$i"
         cd RES_"$i"
 
-	### Copy CPPTRAJ and CP2K inputs
-        cp ../cpptraj_del.in cpptraj_del_"$r_structure".in
-	sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in 	
+	### Copy CPPTRAJ input
+	cp ../cpptraj_del.in cpptraj_del_"$r_structure".in
+	
+	### Check if residue is in the QM layer, and if so delete the sidechain only
+	if grep -q "resid $i)" ../$qm_selection; then
+		res_name=$(cpptraj -p ../"$topology" --resmask :"$i" | tail -n 1 | awk '{print $2}')	
+		if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
+			null_res+="$i "
+			sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
+		elif [ "$res_name" == "CYX" ]; then
+			cys_pair=$(echo "bondinfo :"$i"@SG" | cpptraj hpla2_ee.prmtop | grep "S   S" | awk '{print $4,$5}' | sed 's/:'"$i"'@SG//g')
+			sed -i 's/strip :RES_TAG/strip :RES_TAG,'"$cys_pair"'\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+		fi
+		sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+	else	
+		sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+	fi		
+	
+	### ### Copy CPPTRAJ and CP2K inputs
         cp ../cpptraj_del.in cpptraj_del_"$ts_structure".in
-        cp ../$cp2k_input del_res_"$r_structure".inp
-        cp ../$cp2k_input del_res_"$ts_structure".inp
+        cp ../$cp2k_input res_del_"$r_structure".inp
+        cp ../$cp2k_input res_del_"$ts_structure".inp
 
  	### Replace TAG's in CPPTRAJ inputs
 	sed -i 's/PRMTOP_TAG/'"$topology"'/g' cpptraj_del_*.in
@@ -61,17 +78,17 @@ for i in $(cat $res_list); do
 
  	### Get QM charge and replace in the CP2K inputs
 	qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
-	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_"$r_structure".inp
-        sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_"$ts_structure".inp	
+	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' res_del_"$r_structure".inp
+        sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' res_del_"$ts_structure".inp	
 
 	### Replace TAG's in CP2K inputs
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$r_structure"'.pdb/g' del_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$ts_structure"'.pdb/g' del_res_"$ts_structure".inp
-        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
-	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$r_structure"'.pdb/g' res_del_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$ts_structure"'.pdb/g' res_del_"$ts_structure".inp
+        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
+	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' res_del_*.inp
 
 	### Clean up
-	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat
+	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in #qm_charge.dat
 
         cd ..
 
@@ -81,6 +98,12 @@ for i in $(cat $res_list); do
 done
 
 echo ""
+
+### Print residues that were not deleted
+if [ -n "$null_res" ]; then
+	echo "GLY or PRO residues that were not deleted:"
+	echo "$null_res" 
+fi
 
 ### Clean up
 rm cpptraj_del.in 
