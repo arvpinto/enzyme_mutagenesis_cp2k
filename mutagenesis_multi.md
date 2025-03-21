@@ -44,6 +44,10 @@ The calculations can then be run using a for loop:
 user@machine:~$ for i in ALA_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_res_R.out ; cp2k.popt -i scan_res_R.inp -o scan_res_R.out ; cp2k.popt -i opt_res_TS.inp -o opt_res_TS.out ; cp2k.popt -i scan_res_TS.inp -o scan_res_TS.out ; cd .. ; done
 </pre>
 
+<div align="center">
+    <img src="assets/img/mut_multi_md.gif">
+</div>
+
 <br/>
 
 <h2> <p align="center"> <b>II - Output Processing</b> </p></h2>
