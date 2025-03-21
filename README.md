@@ -1,6 +1,21 @@
 <p align="justify"><b>These protocols investigate the energetic contribution of enzyme residues to the activation energy using QM/MM approaches within CP2K. The objective is to identify residues that destabilize the transition state, enabling mutations that lower the activation energy and enhance the reaction rate.</b></p>
 
-<p align="justify"> The protocols consist of residue deletion (where residues are completely removed from the system), mutagenesis scan (where residues are mutated to a specific residue and their geometry is optimized, e.g. alanine scanning), and multipoint mutant mutagenesis (where several mutations may be introduced and they are submitted to molecular dynamics and geometry optimization procedures). The protocols require the PDB structures of the reactant and transition state geometries of a given reaction and the respective *prmtop topology file (see <a href="https://arvpinto.github.io/enzyme_neb_cp2k" target="_blank">Tutorial for Transition State (TS) searches of Enzymatic Reaction Mechanisms using QM/MM methods in CP2K</a>). Other files are also required but there's an explanation on how to obtain them or they are given as samples in the repository. The scripts employed in the protocols require the availability of software such as VMD, PyMOL, Ambertools and ParmEd. The scripts produce input files that can be directly run in CP2K, thus providing pipelines to automatized these analyses.
+<p><b>The protocols include:</b>
+<br>
+● Residue Deletion: Residues are completely removed from the system
+<br>
+● Mutagenesis Scan: Residues are mutated to a specific alternative (e.g., alanine scanning), and their geometry is optimized
+<br>
+● Multipoint Mutant Mutagenesis: Multiple mutations are introduced, followed by molecular dynamics and geometry optimization procedures
+<br>
+<b>To execute these protocols, the following files are required:</b>
+<br>
+● PDB structures for both the reactant and transition state geometries of the reaction
+<br>
+● The corresponding *prmtop topology file (refer to the Tutorial for Transition State (TS) Searches of Enzymatic Reaction Mechanisms using QM/MM Methods in CP2K)
+</p>
+
+<p align="justify"> Additional required files can be either obtained through specific instructions or found as sample files in the repository. The protocols’ scripts generate input files compatible with CP2K, streamlining the automation of these analyses. The scripts employed in the protocols require the availability of software such as VMD, PyMOL, Ambertools and ParmEd. The scripts produce input files that can be directly run in CP2K, thus providing pipelines to automatized these analyses.
 <br>
 <br>
 The protocols can be downloaded from here <a href="https://github.com/arvpinto/enzyme_mutagenesis_cp2k/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>.
