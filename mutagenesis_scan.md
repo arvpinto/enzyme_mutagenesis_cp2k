@@ -4,7 +4,33 @@
 
 <p align="justify"><b>This protocol is designed to perform a mutagenesis scan with residues such as ALA or GLY. The mutated residues are optimized while keeping the rest of the system fixed, and then single-point calculations are performed on the provided reactant and transition state structures. </b></p>
 
-<p align="justify"> It requires a file with a list of residues to be mutated, a *prmtop file, reactant and transition state structures in the *pdb format, LEaP and CP2K input templates and a selection of the QM region. The following packages are also required: CP2K, PyMOL, VMD, LEaP, CPPTRAJ and ParmEd (AmberTools). </p>
+<br>
+● File listing the residues to be deleted
+<br>
+● Topology file in *prmtop format
+<br>
+● Reactant and transition state structures in *pdb format
+<br>
+● LEaP and CP2K input templates
+<br>
+● Selection of the QM region
+<br>
+<br>
+<b>Additionally, the following software packages are needed:</b>
+<br>
+● CP2K
+<br>
+● PyMOL
+<br>
+● VMD
+<br>
+● CPPTRAJ (from AmberTools)
+<br>
+● LEaP (from AmberTools)
+<br>
+● ParmED (from AmberTools)
+<br>
+
 
 ---
 
