@@ -6,7 +6,7 @@
 
 <p><b>The protocol requires the following inputs:</b>
 <br>
-● File listing the residues to be deleted
+● File listing the residues to be mutated
 <br>
 ● Topology file in *prmtop format
 <br>
