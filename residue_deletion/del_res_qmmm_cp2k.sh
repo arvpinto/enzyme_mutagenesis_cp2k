@@ -41,28 +41,46 @@ for i in $(cat $res_list); do
 	### Copy CPPTRAJ input
 	cp ../cpptraj_del.in cpptraj_del_"$r_structure".in
 	
-	### Check if residue is in the QM layer, and if so delete the sidechain only
+	### Check if residue is in the QM layer and extract residue information
 	if grep -q "resid $i)" ../$qm_selection; then
 		res_name=$(cpptraj -p ../"$topology" --resmask :"$i" | tail -n 1 | awk '{print $2}')	
-		if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
-			null_res+="$i "
-			sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
-		elif [ "$res_name" == "CYX" ]; then
-			cys_pair=$(echo "bondinfo :"$i"@SG" | cpptraj ../"$topology" | grep "S   S" | awk '{print $4,$5}' | sed 's/:'"$i"'@SG//g')
-			if grep -q "resid $cys_pair)" ../$qm_selection; then
-				sed -i 's/strip :RES_TAG/strip :RES_TAG,'"$cys_pair"'\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
-			else
-				sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+		bb_atoms=$(cpptraj -p ../"$topology" --mask :"$i"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
+		atom_names=$(grep -o '(name[^)]*resname '"$res_name"' and resid '"$i"'[^)]*)' ../"$qm_selection" | sed -E 's/\(name ([^)]*)and resname '"$res_name"' and resid '"$i"'\)/\1/')
+		bb_found=true
+		bb_atoms_found=()
+
+		### Check if backbone and/or sidechain are completely inserted in the QM layer
+		for atom in $bb_atoms; do
+		        if [[ " ${atom_names[@]} " =~ " $atom " ]]; then
+		                bb_atoms_found+=("$atom")
+		        else
+		                bb_found=false
+		        fi
+		done
+
+		### Prevent a broken QM/MM boundary
+		if $bb_found; then
+			### If the full backbone is within the QM layer, delete the whole residue
+			sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+		else	### If the backbone is incomplete, the residue is assumed to be at the QM/MM boundary
+			### GLY and PRO are not mutated
+			if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
+				null_res+="$i "
+				sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
+			### If there are backbone atoms, delete the sidechain
+			elif [ -n "$bb_atoms_found" ]; then
+				sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@N,H,CA,HA,C,O) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+			### If there is no backbone, delete the whole residue
+			elif [ -z "$bb_atoms_found" ]; then
+				sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 			fi
-		else
-			sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 		fi
-	else	
+	else
 		sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
-	fi		
+	fi
 	
 	### ### Copy CPPTRAJ and CP2K inputs
-        cp ../cpptraj_del.in cpptraj_del_"$ts_structure".in
+        cp cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in
         cp ../$cp2k_input del_res_"$r_structure".inp
         cp ../$cp2k_input del_res_"$ts_structure".inp
 
@@ -106,7 +124,7 @@ echo ""
 
 ### Print residues that were not deleted
 if [ -n "$null_res" ]; then
-	echo "GLY or PRO residues that were not deleted:"
+	echo "These GLY or PRO residues lie in the QM/MM boundary and were not deleted:"
 	echo "$null_res" 
 fi
 
