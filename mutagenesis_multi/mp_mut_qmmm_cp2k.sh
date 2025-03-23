@@ -78,7 +78,7 @@ RMS_FORCE 3.0E-04
 FORMAT DCD
 ADD_LAST NUMERIC
 &EACH
-MD 250
+GEO_OPT 100
 &END EACH
 &END TRAJECTORY
 &END PRINT
@@ -86,16 +86,7 @@ MD 250
 EOF
 
 ### Create CP2K sections for restarting of the optimization and single-point calculations
-cat <<EOF > opt_extrest.inc
-&EXT_RESTART
-RESTART_FILE_NAME MUT_SCAN
-RESTART_DEFAULT .FALSE.
-RESTART_POS .TRUE.
-RESTART_CELL .TRUE.
-&END EXT_RESTART
-EOF
-
-cat <<EOF > sp_extrest.inc
+cat <<EOF > extrest.inc
 &EXT_RESTART
 RESTART_FILE_NAME MUT_SCAN
 RESTART_DEFAULT .FALSE.
@@ -120,40 +111,54 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 	./mp_mutation.sh "$i" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
 	### Transfer the CP2K template and section inputs to the mutant directory 
-	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$i"/md_res_"$r_structure".inp
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$i"/opt_md_res_"$r_structure".inp
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/md_res_"$r_structure".inp
 	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/opt_res_"$r_structure".inp
 	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/sp_res_"$r_structure".inp
+	cp "$i"/opt_md_res_"$r_structure".inp "$i"/opt_md_res_"$ts_structure".inp
 	cp "$i"/md_res_"$r_structure".inp "$i"/md_res_"$ts_structure".inp
 	cp "$i"/opt_res_"$r_structure".inp "$i"/opt_res_"$ts_structure".inp
 	cp "$i"/sp_res_"$r_structure".inp "$i"/sp_res_"$ts_structure".inp
 	cp motion_md.inc motion_opt.inc "$i"/
-	cp opt_extrest.inc "$i"/opt_extrest_"$r_structure".inc
-        cp opt_extrest.inc "$i"/opt_extrest_"$ts_structure".inc
-	cp sp_extrest.inc "$i"/sp_extrest_"$r_structure".inc
-	cp sp_extrest.inc "$i"/sp_extrest_"$ts_structure".inc
+	cp motion_opt.inc "$i"/motion_opt_md.inc
+	cp extrest.inc "$i"/md_extrest_"$r_structure".inc
+        cp extrest.inc "$i"/md_extrest_"$ts_structure".inc
+	cp extrest.inc "$i"/opt_extrest_"$r_structure".inc
+        cp extrest.inc "$i"/opt_extrest_"$ts_structure".inc
+	cp extrest.inc "$i"/sp_extrest_"$r_structure".inc
+	cp extrest.inc "$i"/sp_extrest_"$ts_structure".inc
 
 	### Enter the mutant directory
 	cd "$i"/
 	
 	### Modify the CP2K section inputs	
+	sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_MD_'"$r_structure"'/' opt_md_res_"$r_structure".inp
+        sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_MD_'"$ts_structure"'/' opt_md_res_"$ts_structure".inp
 	sed -i 's/PROJECT.*/PROJECT MUT_SCAN_MD_'"$r_structure"'/' md_res_"$r_structure".inp
 	sed -i 's/PROJECT.*/PROJECT MUT_SCAN_MD_'"$ts_structure"'/' md_res_"$ts_structure".inp
 	sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$r_structure"'/' opt_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp 
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$r_structure"'/' sp_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$ts_structure"'/' sp_res_"$ts_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$r_structure"'.rst7/g' md_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$ts_structure"'.rst7/g' md_res_"$ts_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$r_structure"'.rst7/g' opt_md_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$ts_structure"'.rst7/g' opt_md_res_"$ts_structure".inp
 	sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$i"'.prmtop/g' *_res_*.inp
 	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$i"'.prmtop/g' *_res_*.inp
+	sed -i 's/MUT_SCAN/MUT_SCAN_OPT_MD_'"$r_structure"'-1.restart/' md_extrest_"$r_structure".inc
+        sed -i 's/MUT_SCAN/MUT_SCAN_OPT_MD_'"$ts_structure"'-1.restart/' md_extrest_"$ts_structure".inc
 	sed -i 's/MUT_SCAN/MUT_SCAN_MD_'"$r_structure"'-1.restart/' opt_extrest_"$r_structure".inc
 	sed -i 's/MUT_SCAN/MUT_SCAN_MD_'"$ts_structure"'-1.restart/' opt_extrest_"$ts_structure".inc
 	sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$r_structure"'-1.restart/' sp_extrest_"$r_structure".inc
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$ts_structure"'-1.restart/' sp_extrest_"$ts_structure".inc
+	sed -i 's/MAX_ITER.*/MAX_ITER 1000/' motion_opt_md.inc
+	echo -e "\n@INCLUDE motion_opt_md.inc" >> opt_md_res_"$r_structure".inp
+	echo -e "\n@INCLUDE motion_opt_md.inc" >> opt_md_res_"$ts_structure".inp
 	echo -e "\n@INCLUDE motion_md.inc" >> md_res_"$r_structure".inp
 	echo -e "\n@INCLUDE motion_md.inc" >> md_res_"$ts_structure".inp
 	echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$r_structure".inp
 	echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$ts_structure".inp
+	echo -e "\n@INCLUDE md_extrest_"$r_structure".inc" >> md_res_"$r_structure".inp
+        echo -e "\n@INCLUDE md_extrest_"$ts_structure".inc" >> md_res_"$ts_structure".inp
 	echo -e "\n@INCLUDE opt_extrest_"$r_structure".inc" >> opt_res_"$r_structure".inp
         echo -e "\n@INCLUDE opt_extrest_"$ts_structure".inc" >> opt_res_"$ts_structure".inp
 	echo -e "\n@INCLUDE sp_extrest_"$r_structure".inc" >> sp_res_"$r_structure".inp
@@ -199,6 +204,6 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 done
 
 ### Clean up
-rm motion_md.inc motion_opt.inc opt_extrest.inc sp_extrest.inc res_list.dat
+rm motion_md.inc motion_opt.inc extrest.inc res_list.dat
 
 echo ""
