@@ -4,6 +4,7 @@
 
 <p align="justify"><b>This protocol is designed to perform a mutagenesis scan with residues such as ALA or GLY. The mutated residues are optimized while keeping the rest of the system fixed, and then single-point calculations are performed on the provided reactant and transition state structures. </b></p>
 
+<p><b>The protocol requires the following inputs:</b>
 <br>
 ● File listing the residues to be deleted
 <br>
