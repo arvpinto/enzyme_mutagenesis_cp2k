@@ -32,6 +32,7 @@ def plot_data(labels, values):
     x_ticks = np.arange(0, max_label + 1, 5)  # Set x-ticks at intervals of 5
     plt.xticks(x_ticks)  
     plt.xlim(0, max_label+1)  
+    plt.ylim(10, 20)
 
     plt.xlabel('Residue Number')
     plt.ylabel('Δ$E$ / kcal·mol$^{-1}$')
