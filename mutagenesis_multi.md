@@ -52,7 +52,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_mult
 user@machine:~$ ./mut_scan_qmmm_cp2k.sh mut_list.dat hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat 3.0
 </pre>
 
-<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while larger residues might not optimize to an adequate pose). The LEaP input should be consistent with the original parameterization. To obtain the structures and topology of the mutated enzyme, the script calls the sp_mutation.sh script, which has the following usage:</p>
+<p align="justify">It prepares a directory for each mutant variant in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while larger residues might not optimize to an adequate pose). The LEaP input should be consistent with the original parameterization. To obtain the structures and topology of the mutated enzyme, the script calls the sp_mutation.sh script, which has the following usage:</p>
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./sp_mutation.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt;
