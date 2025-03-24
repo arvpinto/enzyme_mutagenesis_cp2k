@@ -61,22 +61,29 @@ for i in $(cat $res_list); do
 		### Prevent a broken QM/MM boundary
 		if $bb_found; then
 			### If the full backbone is within the QM layer, delete the whole residue
-			sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+			sed -i 's/strip :RES_TAG/strip :'"$i"' parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
 		else	### If the backbone is incomplete, the residue is assumed to be at the QM/MM boundary
 			### GLY and PRO are not mutated
 			if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
 				null_res+="$i "
 				sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
 			### If there are backbone atoms, delete the sidechain
-			elif [ -n "$bb_atoms_found" ]; then
-				sed -i 's/strip :RES_TAG/strip :RES_TAG\&!(@N,H,CA,HA,C,O) parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
+				sed -i 's/strip :RES_TAG/strip :'"$i"'\&!(@N,H,CA,HA,C,O) parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
+			elif [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]]; then
+				sed -i 's/strip :RES_TAG/strip :'"$i"'\&!(@N,H,CA,HA,C,O,CB) parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
+				echo "change CHARGE :"$i"@CB 0" > parmed_boundary.in
+				echo "change MASS :"$i"@CB 0" >> parmed_boundary.in
+				echo "addLJType :"$i"@CB radius 0 epsilon 0" >> parmed_boundary.in
+				echo "setOverwrite True" >> parmed_boundary.in
+				echo "outparm res_"$i".prmtop" >> parmed_boundary.in
 			### If there is no backbone, delete the whole residue
 			elif [ -z "$bb_atoms_found" ]; then
-				sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+				sed -i 's/strip :RES_TAG/strip :'"$i"' parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 			fi
 		fi
 	else
-		sed -i 's/strip :RES_TAG/strip :RES_TAG parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+		sed -i 's/strip :RES_TAG/strip :'"$i"' parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
 	fi
 	
 	### ### Copy CPPTRAJ and CP2K inputs
@@ -93,11 +100,20 @@ for i in $(cat $res_list); do
         sed -i 's/FILE_TAG/'"$ts_structure"'/g' cpptraj_del_"$ts_structure".in
 
 	### Run CPPTRAJ to get *.pdb and .*prmtop files
-        cpptraj -i cpptraj_del_"$r_structure".in >> ../cpptraj.log 2>&1
-        cpptraj -i cpptraj_del_"$ts_structure".in >> ../cpptraj.log 2>&1
+        cpptraj -i cpptraj_del_"$r_structure".in > cpptraj.log 2>&1
+        cpptraj -i cpptraj_del_"$ts_structure".in >> cpptraj.log 2>&1
+	
+	### Run PARMED to change the parameters of the CB atom to avoid breaking the QM/MM boundary
+	if grep -q "resid $i)" ../$qm_selection; then	
+		if [ "$bb_found" = "false" ]; then
+			if [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]];	then
+				parmed res_"$i".prmtop -i parmed_boundary.in > parmed.log 2>&1
+			fi	
+		fi
+	fi
 
 	### Run VMD with the vmd_forceeval.tcl script to get the definition of the QM layer from the qm_selection
-        vmd res_"$i"_"$r_structure".pdb res_"$i".prmtop -e ../vmd_forceeval.tcl -dispdev none < ../$qm_selection > ../vmd.log 2>&1
+        vmd res_"$i"_"$r_structure".pdb res_"$i".prmtop -e ../vmd_forceeval.tcl -dispdev none < ../$qm_selection > vmd.log 2>&1
 
  	### Get QM charge and replace in the CP2K inputs
 	qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
@@ -111,7 +127,7 @@ for i in $(cat $res_list); do
 	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
 
 	### Clean up
-	#rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in #qm_charge.dat
+	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat parmed_boundary.in
 
         cd ..
 
