@@ -34,7 +34,7 @@
 
 <br/>
 
-A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). This can be achieved through the following procedure:
+To properly construct the QM system, a selection in the format of qm_selection.dat is required. Note that atom numbers will change upon residue deletion, while residue IDs (resid's) will remain the same in the PDB files. Follow these steps to achieve the required selection:
 
 Open the system in VMD, save a *.gro file and a serial_numbers.dat file with the serial numbers of a selection:
 <pre style="color: white; background-color: black;">
@@ -75,7 +75,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
 </pre>
-<p align="justify"> It prepares a directory for each residue in the list where the input files for CP2K will be output. The supplied topology and structures will be processed through CPPTRAJ to delete each of the specified residues. To preserve the QM/MM configuration, only the sidechains of QM residues are deleted (GLY and PRO residues are not deleted and sidechains of disulfide bridges are completely removed if both CYX residues are found in the QM layer). Since deleting residues changes the atom numbering, the QM/MM settings must be updated for each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file must have tags (PRMTOP_TAG and STATE_TAG) placed in the right places. </p>
+<p align="justify"> The script creates a directory for each residue in the list, where the CP2K input files will be generated. It processes the provided topology and structures using CPPTRAJ to remove the specified residues. To maintain the QM/MM configuration, the backbone of boundary residues is preserved while only their sidechains are deleted (GLY and PRO residues at the QM/MM boundary are not deleted). Since residue deletion alters atom numbering, the QM/MM settings must be updated accordingly after each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. </p>
 
 <br/>
 
@@ -112,7 +112,7 @@ user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 
 <br/>
 
-<p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. Here, we can see that the deletion of most residues is unfavorable (this is expected for a small protein in a system with a considerable amount of charged molecules), however, the deletion of residue 92 decreases the energy barrier. </p>
+<p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. Here, we can see that the deletion of most residues is unfavorable, however, there are many residues whose deletion decreases the energy barrier associated with the TS. </p>
 
 <br>
 
