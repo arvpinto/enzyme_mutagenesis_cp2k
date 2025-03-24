@@ -39,7 +39,7 @@
 
 <br/>
 
-A selection in the format presented in qm_selection.dat is required to adequately build the QM system (the atom numbers will change upon residue deletion, resid's remain the same). The preparation of the selection is explained in the I - Input Preparation section of the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" target="_blank">residue deletion protocol</a>.
+To properly construct the QM system, a selection in the format of qm_selection.dat is required. Note that atom numbers will change upon residue deletion, while residue IDs (resid's) will remain the same in the PDB files. The preparation of the selection is explained in the I - Input Preparation section of the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" target="_blank">residue deletion protocol</a>.
 
 <br>
 
@@ -49,7 +49,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan
 user@machine:~$ ./mut_scan_qmmm_cp2k.sh &lt;residue_list&gt; &lt;scan_type&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
 </pre>
 
-<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while larger residues might not optimize to an adequate pose). The LEaP input should be consistent with the original parameterization. To obtain the structures and topology of the mutated enzyme, the script calls the sp_mutation.sh script, which has the following usage:</p>
+<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while other residues might lead to difficulties in the geometry optimization). The &lt;selection&gt; specifies the residue range corresponding to the enzyme. The LEaP input should be consistent with the original parameterization. To obtain the structures and topology of the mutated enzyme, the script calls the sp_mutation.sh script, which has the following usage:</p>
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./sp_mutation.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt;
@@ -67,7 +67,7 @@ user@machine:~$ ./mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; 
 
 The calculations can then be run using a for loop:
 <pre style="color: white; background-color: black;">
-user@machine:~$ for i in ALA_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_res_R.out ; cp2k.popt -i scan_res_R.inp -o scan_res_R.out ; cp2k.popt -i opt_res_TS.inp -o opt_res_TS.out ; cp2k.popt -i scan_res_TS.inp -o scan_res_TS.out ; cd .. ; done
+user@machine:~$ for i in GLY_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_res_R.out ; cp2k.popt -i scan_res_R.inp -o scan_res_R.out ; cp2k.popt -i opt_res_TS.inp -o opt_res_TS.out ; cp2k.popt -i scan_res_TS.inp -o scan_res_TS.out ; cd .. ; done
 </pre>
 
 <br/>
