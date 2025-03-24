@@ -72,12 +72,12 @@ echo "quit" >> pymol_mut_r.pml
 echo "quit" >> pymol_mut_ts.pml
 
 ### Divide the PDB in two: protein and rest
-echo -e 'trajin ../'"$r_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$r_structure"'.pdb pdb' | cpptraj ../"$topology" >> ../cpptraj.log 2>&1
-echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$ts_structure"'.pdb pdb' | cpptraj ../"$topology" >> ../cpptraj.log 2>&1
+echo -e 'trajin ../'"$r_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$r_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$ts_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
 
 ### Run PYMOL to generate mutated structures
-pymol stripped_"$r_structure".pdb -cq pymol_mut_r.pml >> ../pymol.log 2>&1
-pymol stripped_"$ts_structure".pdb -cq pymol_mut_ts.pml >> ../pymol.log 2>&1
+pymol stripped_"$r_structure".pdb -cq pymol_mut_r.pml >> pymol.log 2>&1
+pymol stripped_"$ts_structure".pdb -cq pymol_mut_ts.pml >> pymol.log 2>&1
 
 for i in $(cat ../$residue_list); do
 
@@ -86,14 +86,14 @@ for i in $(cat ../$residue_list); do
 
 	### Change protonation states back to the intended
 	if [ "$res_type" = "ASH" ]; then
-		echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$res_num" to ASH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
-		echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to ASH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
+		echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$res_num" to ASH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
+		echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to ASH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
 	elif [ "$res_type" = "GLH" ]; then
-	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$res_num" to GLH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
-	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to GLH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
+	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$res_num" to GLH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
+	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to GLH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
 	elif [ "$res_type" = "LYN" ]; then
-	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ;  mv trajout.pdb "$mut_name"_"$r_structure".pdb
-	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
+	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ;  mv trajout.pdb "$mut_name"_"$r_structure".pdb
+	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
 	fi
 
 done
@@ -109,14 +109,14 @@ sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmt
 ### If CYX is mutated, the other CYX from the bridge is changed to CYS
 cys_pair=$(grep "."$res_num".SG" leap_"$mut_name"_r.in | sed 's/.'"$mut_name"'.SG//g' | sed 's/[^0-9]//g')
 if [[ -n "$cys_pair" ]]; then
-	echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
-	echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> ../cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
+	echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
+	echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
 	sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
 fi
 
 ### Run leap inputs to generate topologies
-tleap -f leap_"$mut_name"_r.in >> ../leap.log 2>&1
-tleap -f leap_"$mut_name"_ts.in >> ../leap.log 2>&1
+tleap -f leap_"$mut_name"_r.in >> leap.log 2>&1
+tleap -f leap_"$mut_name"_ts.in >> leap.log 2>&1
 
 ### Create PARMED script to merge topologies
 echo "#!/usr/bin/env python" > parmed_join.py
@@ -134,7 +134,7 @@ echo "joined2 = parm2 + parm4" >> parmed_join.py
 echo "joined2.save('"$mut_name"_"$ts_structure".rst7', overwrite=True)" >> parmed_join.py
 
 ### Run PARMED to generate merged topologies
-python parmed_join.py >> ../parmed.log 2>&1
+python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
 rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$mut_name"_*.pdb leap.log "$mut_name"_*.prmtop  >/dev/null 2>&1
