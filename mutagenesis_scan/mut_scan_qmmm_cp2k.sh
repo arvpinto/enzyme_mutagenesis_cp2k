@@ -110,7 +110,7 @@ for i in $(cat $res_list); do
         fi
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
-        vmd "$scan_type"_"$i".prmtop "$scan_type"_"$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > ../vmd.log 2>&1
+        vmd "$scan_type"_"$i".prmtop "$scan_type"_"$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > vmd.log 2>&1
 
         ### Change the QM charge of the input
         qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
