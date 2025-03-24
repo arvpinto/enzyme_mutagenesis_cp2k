@@ -166,7 +166,7 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 
 	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant and the residues specified
 	if [[ -n "$free_residues" ]]; then
-		free_list=$(grep "$i" $free_residues | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
+		free_list=$(grep "$i" ../$free_residues | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 	fi
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(resi '"$(echo "$res_list" "$free_list" | sed 's/[^0-9]//g' | tr '\n' '+')"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
