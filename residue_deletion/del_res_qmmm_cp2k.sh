@@ -106,9 +106,12 @@ for i in $(cat $res_list); do
 	### Run PARMED to change the parameters of the CB atom to avoid breaking the QM/MM boundary
 	if grep -q "resid $i)" ../$qm_selection; then	
 		if [ "$bb_found" = "false" ]; then
-			if [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]];	then
-				parmed res_"$i".prmtop -i parmed_boundary.in > parmed.log 2>&1
-			fi	
+			if [ "$res_name" != "GLY" ] && [ "$res_name" != "PRO" ]; then
+				if [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]];	then
+					parmed res_"$i".prmtop -i parmed_boundary.in > parmed.log 2>&1
+					rm parmed_boundary.in
+				fi	
+			fi
 		fi
 	fi
 
@@ -127,7 +130,7 @@ for i in $(cat $res_list); do
 	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
 
 	### Clean up
-	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat parmed_boundary.in
+	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat
 
         cd ..
 
