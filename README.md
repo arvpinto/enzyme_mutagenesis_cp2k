@@ -1,5 +1,7 @@
 <p align="justify"><b>These protocols investigate the energetic contribution of enzyme residues to the activation energy using QM/MM approaches within CP2K. The objective is to identify residues that destabilize the transition state, enabling mutations that lower the activation energy and enhance the reaction rate.</b></p>
 
+<br>
+
 <p><b>The protocols include:</b>
 <br>
 ● Residue Deletion: Residues are completely removed from the system
