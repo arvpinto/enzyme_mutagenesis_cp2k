@@ -98,7 +98,7 @@ user@machine:~$ for i in MUT_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_r
 After running the optimization and single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue mutation:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in MUT_*; do echo "$i" | sed 's/MUT_//g'; done) <(for i in MUT_*; do echo $(grep "Total FORCE" "$i"/scan_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_multi.dat
+user@machine:~$ paste <(for i in MUT_*; do echo "$i" ; done) <(for i in MUT_*; do echo $(grep "Total FORCE" "$i"/sp_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in MUT_*; do echo $(grep "Total FORCE" "$i"/sp_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_multi.dat
 </pre>
 
 <br/>
