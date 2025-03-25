@@ -74,7 +74,7 @@ user@machine:~$ ./mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; 
 
 <br/>
     
-<p align="justify"><a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
+<p align="justify"><a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
 
 <br/>
 
@@ -98,23 +98,20 @@ user@machine:~$ for i in MUT_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_r
 After running the optimization and single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue mutation:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in MUT_*; do echo "$i" | sed 's/MUT_//g'; done) <(for i in MUT_*; do echo $(grep "Total FORCE" "$i"/scan_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_mut.dat
+user@machine:~$ paste <(for i in MUT_*; do echo "$i" | sed 's/MUT_//g'; done) <(for i in MUT_*; do echo $(grep "Total FORCE" "$i"/scan_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in ALA_*; do echo $(grep "Total FORCE" "$i"/scan_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_multi.dat
 </pre>
 
 <br/>
 
-<p align="justify">The energy barriers can be compared to the ones calculated with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" target="_blank">residue deletion protocol</a> using the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan/E_diff_comparison_bar_plot.py" target="_blank">E_diff_comparison_bar_plot.py</a> script:</p>
+The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat energy_differences_mut.dat
+user@machine:~$ python E_diff_bar_plot.py energy_differences_multi.dat
 </pre>
 
-<br>
-
 <div align="center">
-    <img src="mutagenesis_scan/comparison_bar_plot.png">
+    <img src="mutagenesis_multi/bar_plot.png">
 </div>
-
 <br/>
 
 <p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. Here, we can see that the deletion of most residues is unfavorable (this is expected for a small protein in a system with a considerable amount of charged molecules), however, the deletion of residue 92 decreases the energy barrier. </p>
