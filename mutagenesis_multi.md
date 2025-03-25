@@ -72,8 +72,6 @@ user@machine:~$ ./mp_mutation.sh &lt;mut_name&gt; &lt;residue_list&gt; &lt;topol
 user@machine:~$ ./mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;qm_selection&gt;
 </pre>
 
-<br/>
-    
 <p align="justify"><a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
 
 <br/>
