@@ -64,6 +64,8 @@ Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_del
 user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
 
+<br/>
+
 The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
