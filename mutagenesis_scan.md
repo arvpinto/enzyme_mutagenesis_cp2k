@@ -51,7 +51,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan
 user@machine:~$ ./mut_scan_qmmm_cp2k.sh residue_list.dat GLY hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat
 </pre>
 
-<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while other residues might lead to difficulties in the geometry optimization). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization.</p>
+<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while other residues might lead to difficulties in the geometry optimization). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce geometry optimization and single-point point energy input files.</p>
 
 <br>
 
@@ -71,7 +71,7 @@ user@machine:~$ ./mut_scan_qmmm_cp2k.sh residue_list.dat GLY hpla2_ee.prmtop R.p
 
 <br>
     
-<p align="justify">The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the mut_scan_qmmm_cp2k.sh to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The cp2k_template.inp file is used to produce geometry optimization and single-point energy input files.</p>
+<p align="justify">The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the mut_scan_qmmm_cp2k.sh to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
 
 <br/>
 
