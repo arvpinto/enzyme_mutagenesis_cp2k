@@ -29,7 +29,8 @@
 <br>
 ● LEaP (from AmberTools)
 <br>
-● ParmED (from AmberTools)</p>
+● ParmED (from AmberTools)
+</p>
 
 
 ---
