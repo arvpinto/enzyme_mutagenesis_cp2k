@@ -29,8 +29,6 @@ The protocols can be downloaded from here <a href="https://github.com/arvpinto/e
 <br>
 <p>Some of these approaches have been employed in:</p>
 
-<br/>
-
 <p><a href="https://doi.org/10.1021/acscatal.1c02444" target="_blank">● Reaction Mechanism of MHETase, a PET Degrading Enzyme</a></p>
 <p><a href="https://doi.org/10.1039/D4SC02315C" target="_blank">● Revisiting the reaction pathways for phospholipid hydrolysis catalyzed by phospholipase A2 with QM/MM methods</a></p>
 <p><a href="https://pubs.acs.org/doi/10.1021/acs.jcim.2c01337" target="_blank">● Engineering DszC Mutants from Transition State Macrodipole Considerations and Evolutionary Sequence Analysis</a></p>
