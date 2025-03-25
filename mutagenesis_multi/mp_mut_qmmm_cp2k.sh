@@ -4,8 +4,8 @@ shopt -s expand_aliases
 source ~/.bashrc
 
 ### Check if the usage is correct
-if [ $# -ne 8 ] && [ $# -ne 9 ]; then
-    echo "Usage: ./mp_mut_qmmm_cp2k.sh <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <distance_cutoff>"
+if [ $# -ne 9 ]; then
+    echo "Usage: ./mp_mut_qmmm_cp2k.sh <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <selection_free>"
     exit 1 
 fi
 
@@ -18,7 +18,7 @@ selection="$5"
 leap_input="$6"
 cp2k_input="$7"
 qm_selection="$8"
-distance_cutoff="$9"
+selection_free="$9"
 
 ### Create CP2K section for molecular dynamics
 cat <<EOF > motion_md.inc
@@ -28,7 +28,7 @@ ENSEMBLE NVT
 TEMPERATURE 303.15
 TIMESTEP 1.0
 STEPS 10001
-MAX_STEPS 1001
+MAX_STEPS 10001
 &THERMOSTAT
 TYPE CSVR
 &CSVR
@@ -165,12 +165,12 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 	echo -e "\n@INCLUDE sp_extrest_"$ts_structure".inc" >> sp_res_"$ts_structure".inp
 
 	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant and the residues specified by the cutoff
-	if [[ -n "$distance_cutoff" ]]; then
-		res_nums=$(echo $res_list | sed 's/[a-zA-Z]//g' | sed 's/ /,/g')
-		free_list=$(cpptraj -p ../"$topology" -y ../"$ts_structure".pdb -c ../"$ts_structure".pdb --mask ":"$res_nums"<:"$distance_cutoff"" | tail -n +2 | awk '{print $1}' | tr '\n' '+')
+	if [[ -n "$selection_free" ]]; then
+		free_mask=$(grep "$i" ../"$selection_free" | awk '{ $1=""; print $0 }')
+		free_list=$(cpptraj -p ../"$topology" -y ../"$ts_structure".pdb -c ../"$ts_structure".pdb --mask "$free_mask" | tail -n +2 | awk '{print $1}' | tr '\n' '+')
 	fi
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
-	echo 'cmd.iterate("!((resi '"$(echo "$res_list" | sed 's/[^0-9]//g' | tr '\n' '+')"') | (index '"$(echo "$free_list")"')) ", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
+	echo 'cmd.iterate("!(index '"$(echo "$free_list")"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
 	pymol -d "load "$i".prmtop, mysystem ;load "$i"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
@@ -195,7 +195,7 @@ for i in $(cat $mut_list | awk '{print $1}'); do
         sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' *_res_*.inp
 
 	### Clean up
-	rm pymol_fixed_atoms.pml qm_charge.dat fixed_atoms.dat
+	#rm pymol_fixed_atoms.pml qm_charge.dat fixed_atoms.dat
 	
 	cd ..
 
