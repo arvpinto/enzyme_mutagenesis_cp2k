@@ -102,13 +102,9 @@ The energy barriers can be plotted with the <a href="https://arvpinto.github.io/
 user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 </pre>
 
-<br>
-
 <div align="center">
     <img src="residue_deletion/bar_plot.png">
 </div>
-
-<br/>
 
 <p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. Here, we can see that the deletion of most residues is unfavorable, however, there are many residues whose deletion decreases the energy barrier associated with the TS. </p>
 
@@ -120,13 +116,10 @@ For reactions involving charge separation, it might be useful to represent the r
 user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1982 34854
 </pre>
 
-<br/>
-
 <div align="center">
     <img src="residue_deletion/marker_plot.png">
 </div>
 
-<br>
 
 <p align="justify"> The script plots the calculated energy barriers against d<sub>1</sub>-d<sub>2</sub>, where d<sub>1</sub> is the distance between the center of geometry of the deleted residue and the midpoint between the atoms that represent the direction of the positive charge, and d<sub>2</sub> is the distance between the center of geometry of the deleted residue and the midpoint between the atoms that represent the direction of the negative charge. In principle, this approach can accurately capture and quantify the electrostatic contribution of residues to the transition state. Usually, negatively charged residues close to the positive moiety stabilize the transition state, while positively charged residues are destabilizing (and vice-versa relative to the negatively charged moiety). Note that the electric field induced by enzymes can be quite complex and these assumptions might not always hold. Suppose that a positively charged residue is close to the positive charge, but stabilizing the negative charges of two chemical groups nearby, the repulsion that arises from the lack of neutralizing positive charge may increase the energy barrier instead. In any case, when discussing this type of result, the environment of the specific residues should be taken into account. </p>
 
