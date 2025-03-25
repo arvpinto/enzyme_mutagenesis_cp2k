@@ -34,8 +34,8 @@
 
 <br/>
 
-To properly construct the QM system, a selection in the format of qm_selection.dat is required. Note that atom numbers will change upon residue deletion, while residue IDs (resid's) will remain the same in the PDB files. Follow these steps to achieve the required selection:
-
+<p align="justify">To properly construct the QM system, a selection in the format of qm_selection.dat is required. Note that atom numbers will change upon residue deletion, while residue IDs (resid's) will remain the same in the PDB files. Follow these steps to achieve the required selection:</p>
+<br/>
 Open the system in VMD, save a *.gro file and a serial_numbers.dat file with the serial numbers of a selection:
 <pre style="color: white; background-color: black;">
 user@machine:~$ vmd hpla2.prmtop R.pdb
@@ -54,21 +54,15 @@ quit
 user@machine:~$ sed -i 's/ /+/g' serial_numbers.dat 
 </pre>
 
-<br/>
-
 The *.gro file can then be opened in PYMOL, the selection introduced and a HL.mol2 file exported:
 <pre style="color: white; background-color: black;">
 user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+ serial_numbers.dat); save HL.mol2, my_selection"
 </pre>
 
-<br/>
-
 Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
-
-<br/>
 
 The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
 
