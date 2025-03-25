@@ -54,7 +54,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_mult
 user@machine:~$ ./mp_mut_qmmm_cp2k.sh mut_list.dat hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat selection_free.dat
 </pre>
 
-<p align="justify">It prepares a directory for each mutant variant in the list where the input files for CP2K will be output. A given mutant variant can be specified as &lt;name&gt; &lt;number&gt;&lt;residue&gt; in the file mutant variant list (e.g. MUT_001 41LYS 53ASP 74GLU 92ASP). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The <selection> argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce molecular dynamics, geometry optimization and single-point point energy input files. The &lt;selection_free&gt; argument requires a file containing cpptraj selections for each mutant variant, specifying the atoms that remain unfrozen (e.g. MUT_001 (:41,53,74,92&!@N,H,CA,HA,C,O)&lt;:3).</p>
+<p align="justify">It prepares a directory for each mutant variant in the list where the input files for CP2K will be output. A given mutant variant can be specified as &lt;name&gt; &lt;number&gt;&lt;residue&gt; in the file mutant variant list (e.g. MUT_001 41LYS 53ASP 74GLU 92ASP). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The <selection> argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce molecular dynamics, geometry optimization and single-point point energy input files. The &lt;selection_free&gt; argument requires a file containing cpptraj selections for each mutant variant, specifying the atoms that remain unfrozen (e.g. MUT_001 (:41,53,74,92&amp;!@N,H,CA,HA,C,O)&lt;:3).</p>
 
 <br/>
     
@@ -72,7 +72,7 @@ user@machine:~$ ./mp_mutation.sh &lt;mut_name&gt; &lt;residue_list&gt; &lt;topol
 user@machine:~$ ./mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;qm_selection&gt;
 </pre>
 
-<p align="justify"><a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
+<p align="justify">The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
 
 <br/>
 
