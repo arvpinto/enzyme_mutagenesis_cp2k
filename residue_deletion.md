@@ -24,7 +24,8 @@
 <br>
 ● VMD
 <br>
-● CPPTRAJ (from AmberTools)</p>
+● CPPTRAJ (from AmberTools)
+</p>
 
 
 ---
