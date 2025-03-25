@@ -6,7 +6,7 @@
 <br>
 ● Residue Deletion: Residues are completely removed from the system
 <br>
-● Mutagenesis Scan: Residues are mutated to a specific alternative (e.g., alanine scanning), and their geometry is optimized
+● Mutagenesis Scan: Residues are mutated to a specified type (e.g., glycine scanning), and their geometry is optimized
 <br>
 ● Multipoint Mutant Mutagenesis: Multiple mutations are introduced, followed by molecular dynamics and geometry optimization procedures
 <br>
@@ -23,16 +23,15 @@
 <br>
 The protocols can be downloaded from here <a href="https://github.com/arvpinto/enzyme_mutagenesis_cp2k/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>.
 </p>
-<br>
 
 ---
 
+<br>
 Some of these approaches have been employed in:
 <p><a href="https://doi.org/10.1021/acscatal.1c02444" target="_blank">● Reaction Mechanism of MHETase, a PET Degrading Enzyme</a></p>
 <p><a href="https://doi.org/10.1039/D4SC02315C" target="_blank">● Revisiting the reaction pathways for phospholipid hydrolysis catalyzed by phospholipase A2 with QM/MM methods</a></p>
 <p><a href="https://pubs.acs.org/doi/10.1021/acs.jcim.2c01337" target="_blank">● Engineering DszC Mutants from Transition State Macrodipole Considerations and Evolutionary Sequence Analysis</a></p>
-
-
+<br>
 
 
 
