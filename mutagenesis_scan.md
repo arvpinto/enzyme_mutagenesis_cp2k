@@ -51,7 +51,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan
 user@machine:~$ ./mut_scan_qmmm_cp2k.sh residue_list.dat GLY hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat
 </pre>
 
-<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan (ALA and GLY are adequate to evaluate the contribution of sidechains, while other residues might lead to difficulties in the geometry optimization). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce geometry optimization and single-point point energy input files.</p>
+<p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan. ALA and GLY are suitable for assessing sidechain contributions, whereas residues with greater volume and more degrees of freedom may complicate the analysis. Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce geometry optimization and single-point point energy input files.</p>
 
 <br>
 
@@ -104,6 +104,6 @@ user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat 
     <img src="mutagenesis_scan/comparison_bar_plot.png">
 </div>
 
-<p align="justify"> The energy barriers exhibit a similar trend in both cases, however, backbone deletion results in higher barriers compared to mutation by GLY. The difference is more pronounced with CYX43, as deletion results in a deprotonated cysteine residue, whereas the mutation yields a protonated cysteine. As expected, either deletion or mutation of the catalytic ASP91 results in a significantly higher energy barrier. Residues that significantly lower the energy barrier become key hotspots for targeted mutagenesis studies.</p>
+<p align="justify"> The energy barriers exhibit a similar trend in both cases, however, backbone deletion results in higher barriers compared to mutation by GLY. The difference is more pronounced with CYX43, as deletion results in a deprotonated cysteine residue, whereas the mutation yields a protonated cysteine. As expected, either deletion or mutation of the catalytic ASP91 results in a significantly higher energy barrier. Residues that significantly lower the energy barrier become key hotspots for targeted mutagenesis studies. It is important to note that different conformations in the R and TS states might break the adiabatic connection and lead to jumps in the PES.</p>
 
 <br/>
