@@ -110,7 +110,7 @@ user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 
 <br>
 
-For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:
+<p align="justify">For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:</p>
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1982 34854
