@@ -20,9 +20,9 @@ qm_selection="$6"
 ### Create CPPTRAJ input
 cat <<EOF > cpptraj_del.in
 parm ../PRMTOP_TAG
-trajin ../STATE_TAG 1
+trajin ../STATE_TAG.pdb 1
 strip :RES_TAG 
-trajout res_RES_TAG_FILE_TAG.pdb
+trajout res_RES_TAG_STATE_TAG.pdb
 EOF
 
 ### Function to update qm_selection
@@ -74,16 +74,20 @@ for resid in $(<$res_list); do
 		
 		### Prevent a broken QM/MM boundary
 		if $bb_found; then
+
 			### If the full backbone is within the QM layer, delete the whole residue
 			sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 			### Update qm_selection
 			update_qm_selection "$resid"
+
 		else	### If the backbone is incomplete, the residue is assumed to be at the QM/MM boundary
+	
 			### GLY and PRO are not mutated
 			if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
 				null_res+="$resid "
 				cd ..
 				continue
+
 			### If there are backbone atoms, delete the sidechain
 			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
@@ -96,6 +100,7 @@ for resid in $(<$res_list); do
 				echo "setOverwrite True" >> parmed_boundary.in
 				echo "outparm res_"$resid".prmtop" >> parmed_boundary.in
 				cp ../"$qm_selection" ./
+
 			### If there is no backbone, delete the whole residue
 			elif [ -z "$bb_atoms_found" ]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
@@ -103,7 +108,8 @@ for resid in $(<$res_list); do
 				update_qm_selection "$resid"
 			fi
 		fi
-	else
+
+	else ### Residue is outside the QM layer
 		sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 		### Update qm_selection
 		update_qm_selection "$resid"
@@ -117,10 +123,8 @@ for resid in $(<$res_list); do
  	### Replace TAG's in CPPTRAJ inputs
 	sed -i 's/PRMTOP_TAG/'"$topology"'/g' cpptraj_del_*.in
         sed -i 's/RES_TAG/'"$resid"'/g' cpptraj_del_*.in
-        sed -i 's/STATE_TAG/'"$r_structure"'.pdb/g' cpptraj_del_"$r_structure".in
-        sed -i 's/STATE_TAG/'"$ts_structure"'.pdb/g' cpptraj_del_"$ts_structure".in
-        sed -i 's/FILE_TAG/'"$r_structure"'/g' cpptraj_del_"$r_structure".in
-        sed -i 's/FILE_TAG/'"$ts_structure"'/g' cpptraj_del_"$ts_structure".in
+        sed -i 's/STATE_TAG/'"$r_structure"'/g' cpptraj_del_"$r_structure".in
+        sed -i 's/STATE_TAG/'"$ts_structure"'/g' cpptraj_del_"$ts_structure".in
 
 	### Run CPPTRAJ to get *.pdb and .*prmtop files
         cpptraj -i cpptraj_del_"$r_structure".in > cpptraj.log 2>&1
@@ -157,7 +161,7 @@ done
 
 echo ""
 
-### Print residues that were not deleted
+### Print residues that were not deleted and remove the directories
 if [ -n "$null_res" ]; then
 	echo "These GLY or PRO residues lie in the QM/MM boundary and were not deleted:"
 	echo "$null_res" 
@@ -166,5 +170,4 @@ fi
 
 ### Clean up
 rm cpptraj_del.in 
-
 
