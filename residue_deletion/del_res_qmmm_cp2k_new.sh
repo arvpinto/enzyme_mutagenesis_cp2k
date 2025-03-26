@@ -59,7 +59,7 @@ for resid in $(<$res_list); do
 	if grep -q "resid $resid)" ../$qm_selection; then
 		res_name=$(cpptraj -p ../"$topology" --resmask :"$resid" | awk 'END{print $2}')	
 		bb_atoms=$(cpptraj -p ../"$topology" --mask :"$resid"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | awk 'NR>1{print $2}')
-		atom_names=$(grep -oP "\(name [^)]+resname $res_name and resid $res_id[^)]*\)" ../"$qm_selection" | sed -E "s/\(name ([^)]*)and resname $res_name and resid $res_id\)/\1/" | tr -d '"')
+		atom_names=$(grep -oP "\(name [^)]+resname $res_name and resid $resid[^)]*\)" ../"$qm_selection" | sed -E "s/\(name ([^)]*)and resname $res_name and resid $resid\)/\1/" | tr -d '"')
 
 		### Check if backbone is completely inserted in the QM layer
 		bb_found=true
@@ -82,7 +82,8 @@ for resid in $(<$res_list); do
 			### GLY and PRO are not mutated
 			if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
 				null_res+="$resid "
-				sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
+				cd ..
+				continue
 			### If there are backbone atoms, delete the sidechain
 			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
@@ -160,6 +161,7 @@ echo ""
 if [ -n "$null_res" ]; then
 	echo "These GLY or PRO residues lie in the QM/MM boundary and were not deleted:"
 	echo "$null_res" 
+	for null in $null_res; do rm -r RES_"$null" ; done
 fi
 
 ### Clean up
