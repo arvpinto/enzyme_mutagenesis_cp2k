@@ -5,15 +5,15 @@ source ~/.bashrc
 
 ### Check if usage is correct
 if [ $# -ne 6 ]; then
-    echo "Usage: ./del_res_qmmm_cp2k.sh <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
+    echo "Usage: $0 <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
     exit 1
 fi
 
 ### Variables list
 res_list="$1"
 topology="$2"
-r_structure=$(echo $3 | sed 's/.pdb//g')
-ts_structure=$(echo $4 | sed 's/.pdb//g')
+r_structure="${3%.pdb}"
+ts_structure="${4%.pdb}"
 cp2k_input="$5"
 qm_selection="$6"
 
@@ -25,31 +25,45 @@ strip :RES_TAG
 trajout res_RES_TAG_FILE_TAG.pdb
 EOF
 
+### Function to update qm_selection
+update_qm_selection() {
+grep -oP '\(.*?\)' ../"$qm_selection" > "$qm_selection" 
+while read line; do
+        qm_resid=$(echo $line | grep -o 'resid [0-9]*' | sed 's/resid //')
+        if [ "$qm_resid" -gt "$1" ]; then
+                echo $line | sed 's/resid '"$qm_resid"')/resid '"$(($qm_resid-1))"')/g'
+        elif [ "$qm_resid" -lt "$1" ]; then
+                echo $line
+        fi
+done < "$qm_selection"  | tr '\n' '+' | sed 's/+$//' | sed 's/+/ or /g' > temp && mv temp "$qm_selection"
+}
+
 ### Create progress bar
-total=$(cat $res_list | wc -l) ; printf "\rProgress: [%-50s] %d/%d" " " 0 $total
+total=$(wc -l < $res_list) 
+printf "\rProgress: [%-50s] %d/%d" " " 0 "$total"
 counter=0
 null_res=""
 
 ### Loop through each residue in the list
-for i in $(cat $res_list); do
+for resid in $(<$res_list); do
         ((counter++))
 
 	### Create file directory
-        mkdir RES_"$i"
-        cd RES_"$i"
+        mkdir RES_"$resid"
+        cd RES_"$resid"
 
 	### Copy CPPTRAJ input
 	cp ../cpptraj_del.in cpptraj_del_"$r_structure".in
 	
 	### Check if residue is in the QM layer and extract residue information
-	if grep -q "resid $i)" ../$qm_selection; then
-		res_name=$(cpptraj -p ../"$topology" --resmask :"$i" | tail -n 1 | awk '{print $2}')	
-		bb_atoms=$(cpptraj -p ../"$topology" --mask :"$i"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
-		atom_names=$(grep -o '(name[^)]*resname '"$res_name"' and resid '"$i"'[^)]*)' ../"$qm_selection" | sed -E 's/\(name ([^)]*)and resname '"$res_name"' and resid '"$i"'\)/\1/' | sed 's/"//g')
-		bb_found=true
-		bb_atoms_found=()
+	if grep -q "resid $resid)" ../$qm_selection; then
+		res_name=$(cpptraj -p ../"$topology" --resmask :"$resid" | awk 'END{print $2}')	
+		bb_atoms=$(cpptraj -p ../"$topology" --mask :"$resid"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | awk 'NR>1{print $2}')
+		atom_names=$(grep -oP "\(name [^)]+resname $res_name and resid $res_id[^)]*\)" ../"$qm_selection" | sed -E "s/\(name ([^)]*)and resname $res_name and resid $res_id\)/\1/" | tr -d '"')
 
-		### Check if backbone and/or sidechain are completely inserted in the QM layer
+		### Check if backbone is completely inserted in the QM layer
+		bb_found=true
+                bb_atoms_found=()
 		for atom in $bb_atoms; do
 		        if [[ " ${atom_names[@]} " =~ " $atom " ]]; then
 		                bb_atoms_found+=("$atom")
@@ -61,61 +75,37 @@ for i in $(cat $res_list); do
 		### Prevent a broken QM/MM boundary
 		if $bb_found; then
 			### If the full backbone is within the QM layer, delete the whole residue
-			sed -i 's/strip :RES_TAG/strip :'"$i"' parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
+			sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 			### Update qm_selection
-			grep -oP '\(.*?\)' ../"$qm_selection" > "$qm_selection" 
-        		while read line; do
-        		        resid=$(echo $line | grep -o 'resid [0-9]*' | sed 's/resid //')
-        		        if [ "$resid" -gt "$i" ]; then
-        		                echo $line | sed 's/resid '"$resid"')/resid '"$(($resid-1))"')/g'
-        		        elif [ "$resid" -lt "$i" ]; then
-        		                echo $line
-        		        fi
-        		done < "$qm_selection"  | tr '\n' '+' | sed 's/+$//' | sed 's/+/ or /g' > temp && mv temp "$qm_selection"
+			update_qm_selection "$resid"
 		else	### If the backbone is incomplete, the residue is assumed to be at the QM/MM boundary
 			### GLY and PRO are not mutated
 			if [ "$res_name" == "GLY" ] || [ "$res_name" == "PRO" ]; then
-				null_res+="$i "
+				null_res+="$resid "
 				sed -i '/strip :RES_TAG/d' cpptraj_del_"$r_structure".in
 			### If there are backbone atoms, delete the sidechain
 			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
-				sed -i 's/strip :RES_TAG/strip :'"$i"'\&!(@N,H,CA,HA,C,O) parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
+				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 				cp ../"$qm_selection" ./
 			elif [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]]; then
-				sed -i 's/strip :RES_TAG/strip :'"$i"'\&!(@N,H,CA,HA,C,O,CB) parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
-				echo "change CHARGE :"$i"@CB 0" > parmed_boundary.in
-				echo "change MASS :"$i"@CB 0" >> parmed_boundary.in
-				echo "addLJType :"$i"@CB radius 0 epsilon 0" >> parmed_boundary.in
+				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O,CB) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
+				echo "change CHARGE :"$resid"@CB 0" > parmed_boundary.in
+				echo "change MASS :"$resid"@CB 0" >> parmed_boundary.in
+				echo "addLJType :"$resid"@CB radius 0 epsilon 0" >> parmed_boundary.in
 				echo "setOverwrite True" >> parmed_boundary.in
-				echo "outparm res_"$i".prmtop" >> parmed_boundary.in
+				echo "outparm res_"$resid".prmtop" >> parmed_boundary.in
 				cp ../"$qm_selection" ./
 			### If there is no backbone, delete the whole residue
 			elif [ -z "$bb_atoms_found" ]; then
-				sed -i 's/strip :RES_TAG/strip :'"$i"' parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
+				sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_RES_TAG.prmtop/' cpptraj_del_"$r_structure".in
 				### Update qm_selection
-				grep -oP '\(.*?\)' ../"$qm_selection" > "$qm_selection" 
-        			while read line; do
-        			        resid=$(echo $line | grep -o 'resid [0-9]*' | sed 's/resid //')
-        			        if [ "$resid" -gt "$i" ]; then
-        			                echo $line | sed 's/resid '"$resid"')/resid '"$(($resid-1))"')/g'
-        			        elif [ "$resid" -lt "$i" ]; then
-        			                echo $line
-        			        fi
-        			done < "$qm_selection"  | tr '\n' '+' | sed 's/+$//' | sed 's/+/ or /g' > temp && mv temp "$qm_selection"
+				update_qm_selection "$resid"
 			fi
 		fi
 	else
-		sed -i 's/strip :RES_TAG/strip :'"$i"' parmout res_'"$i"'.prmtop/' cpptraj_del_"$r_structure".in
+		sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 		### Update qm_selection
-		grep -oP '\(.*?\)' ../"$qm_selection" > "$qm_selection" 
-        	while read line; do
-        	        resid=$(echo $line | grep -o 'resid [0-9]*' | sed 's/resid //')
-        	        if [ "$resid" -gt "$i" ]; then
-        	                echo $line | sed 's/resid '"$resid"')/resid '"$(($resid-1))"')/g'
-        	        elif [ "$resid" -lt "$i" ]; then
-        	                echo $line
-        	        fi
-        	done < "$qm_selection"  | tr '\n' '+' | sed 's/+$//' | sed 's/+/ or /g' > temp && mv temp "$qm_selection"
+		update_qm_selection "$resid"
 	fi
 	
 	### ### Copy CPPTRAJ and CP2K inputs
@@ -125,7 +115,7 @@ for i in $(cat $res_list); do
 
  	### Replace TAG's in CPPTRAJ inputs
 	sed -i 's/PRMTOP_TAG/'"$topology"'/g' cpptraj_del_*.in
-        sed -i 's/RES_TAG/'"$i"'/g' cpptraj_del_*.in
+        sed -i 's/RES_TAG/'"$resid"'/g' cpptraj_del_*.in
         sed -i 's/STATE_TAG/'"$r_structure"'.pdb/g' cpptraj_del_"$r_structure".in
         sed -i 's/STATE_TAG/'"$ts_structure"'.pdb/g' cpptraj_del_"$ts_structure".in
         sed -i 's/FILE_TAG/'"$r_structure"'/g' cpptraj_del_"$r_structure".in
@@ -136,30 +126,23 @@ for i in $(cat $res_list); do
         cpptraj -i cpptraj_del_"$ts_structure".in >> cpptraj.log 2>&1
 	
 	### Run PARMED to change the parameters of the CB atom to avoid breaking the QM/MM boundary
-	if grep -q "resid $i)" ../"$qm_selection"; then	
-		if [ "$bb_found" = "false" ]; then
-			if [ "$res_name" != "GLY" ] && [ "$res_name" != "PRO" ]; then
-				if [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]];	then
-					parmed res_"$i".prmtop -i parmed_boundary.in > parmed.log 2>&1
-					rm parmed_boundary.in
-				fi	
-			fi
-		fi
+	if [[ -f parmed_boundary.in ]]; then
+		parmed res_"$resid".prmtop -i parmed_boundary.in > parmed.log 2>&1
+		rm parmed_boundary.in
 	fi
 
 	### Run VMD with the vmd_forceeval.tcl script to get the definition of the QM layer from the qm_selection
-        vmd res_"$i".prmtop res_"$i"_"$r_structure".pdb -e ../vmd_forceeval.tcl -dispdev none < "$qm_selection" > vmd.log 2>&1
+        vmd res_"$resid".prmtop res_"$resid"_"$r_structure".pdb -e ../vmd_forceeval.tcl -dispdev none < "$qm_selection" > vmd.log 2>&1
 
  	### Get QM charge and replace in the CP2K inputs
-	qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
-	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_"$r_structure".inp
-        sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_"$ts_structure".inp	
+	qm_charge=$(awk '{print int($1)}' qm_charge.dat)
+	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_*.inp
 
 	### Replace TAG's in CP2K inputs
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$r_structure"'.pdb/g' del_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$i"'_'"$ts_structure"'.pdb/g' del_res_"$ts_structure".inp
-        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
-	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$i"'.prmtop/g' del_res_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$resid"'_'"$r_structure"'.pdb/g' del_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$resid"'_'"$ts_structure"'.pdb/g' del_res_"$ts_structure".inp
+        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$resid"'.prmtop/g' del_res_*.inp
+	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$resid"'.prmtop/g' del_res_*.inp
 
 	### Clean up
 	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat 
