@@ -5,16 +5,21 @@ source ~/.bashrc
 
 # Check if the usage is correct
 if [ $# -ne 7 ]; then
-    echo "Usage: ./sp_mutation.sh <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
+    echo "Usage: $0 <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
     exit 1  
 fi
+
+# Check if required files exist
+for file in "$3" "$4" "$5" "$7"; do
+    [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
+done
 
 ### Variables list
 res_num="$1"
 res_type="$2"
 topology="$3"
-r_structure=$(echo "$4" | sed 's/.pdb//')
-ts_structure=$(echo "$5" | sed 's/.pdb//')
+r_structure="${4%.pdb}"
+ts_structure="${5%.pdb}"
 selection="$6"
 leap_input="$7"
 
@@ -49,6 +54,8 @@ cd "$res_type"_"$res_num"
 ### Divide the PDB in two: protein and rest
 echo -e 'trajin ../'"$r_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$r_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
 echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$ts_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$r_structure"'.pdb\nstrip '"$selection"' parmout rest.prmtop\ntrajout rest_'"$r_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip '"$selection"'\ntrajout rest_'"$ts_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
 
 ### Prepare PYMOL mutagenesis scripts
 echo "cmd.wizard(\"mutagenesis\")" >> pymol_mut_r.pml
@@ -101,25 +108,30 @@ fi
 tleap -f leap_"$res_type"_r.in >> leap.log 2>&1
 tleap -f leap_"$res_type"_ts.in >> leap.log 2>&1
 
-### Create PARMED script to merge topologies
+### Use CPPTRAJ to merge coordinates
+echo "parm "$res_type"_"$res_num"_"$r_structure".prmtop" >> cpptraj_join.in
+echo "parm rest.prmtop" >> cpptraj_join.in
+echo "loadcrd "$res_type"_"$res_num"_"$r_structure".rst7 parm "$res_type"_"$res_num"_"$r_structure".prmtop CRD1" >> cpptraj_join.in
+echo "loadcrd "$res_type"_"$res_num"_"$ts_structure".rst7 parm "$res_type"_"$res_num"_"$r_structure".prmtop CRD2" >> cpptraj_join.in
+echo "loadcrd rest_"$r_structure".pdb parm rest.prmtop CRD3" >> cpptraj_join.in
+echo "loadcrd rest_"$ts_structure".pdb parm rest.prmtop CRD4" >> cpptraj_join.in
+echo "combinecrd CRD1 CRD3 crdname CRD-1-3" >> cpptraj_join.in
+echo "combinecrd CRD2 CRD4 crdname CRD-2-4" >> cpptraj_join.in
+echo "crdout CRD-1-3 "$res_type"_"$res_num"_"$r_structure".pdb" >> cpptraj_join.in
+echo "crdout CRD-2-4 "$res_type"_"$res_num"_"$ts_structure".pdb" >> cpptraj_join.in
+cpptraj -i cpptraj_join.in >> cpptraj.log 2>&1
+
+### Use PARMED to merge topologies
 echo "#!/usr/bin/env python" > parmed_join.py
 echo "import parmed as pmd" >> parmed_join.py
-echo "parm1 = pmd.load_file('"$res_type"_"$res_num"_"$r_structure".prmtop', '"$res_type"_"$res_num"_"$r_structure".rst7')" >> parmed_join.py
-echo "parm2 = pmd.load_file('"$res_type"_"$res_num"_"$ts_structure".prmtop', '"$res_type"_"$res_num"_"$ts_structure".rst7')" >> parmed_join.py
-echo "parm3 = pmd.load_file('../"$topology"', '../"$r_structure".pdb')" >> parmed_join.py
-echo "parm4 = pmd.load_file('../"$topology"', '../"$ts_structure".pdb')" >> parmed_join.py
-echo "parm3.strip('$selection')" >> parmed_join.py
-echo "parm4.strip('$selection')" >> parmed_join.py
-echo "joined1 = parm1 + parm3" >> parmed_join.py
-echo "joined1.save('"$res_type"_"$res_num".prmtop', overwrite=True)" >> parmed_join.py
-echo "joined1.save('"$res_type"_"$res_num"_"$r_structure".rst7', overwrite=True)" >> parmed_join.py
-echo "joined2 = parm2 + parm4" >> parmed_join.py
-echo "joined2.save('"$res_type"_"$res_num"_"$ts_structure".rst7', overwrite=True)" >> parmed_join.py
-
-### Run PARMED to generate merged topologies
+echo "top1 = pmd.load_file('"$res_type"_"$res_num"_"$r_structure".prmtop')" >> parmed_join.py
+echo "top2 = pmd.load_file('rest.prmtop')" >> parmed_join.py
+echo "joined = top1 + top2" >> parmed_join.py
+echo "joined.save('"$res_type"_"$res_num".prmtop', overwrite=True)" >> parmed_join.py
 python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
-rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.pdb leap.log "$res_type"_"$res_num"_*.prmtop  >/dev/null 2>&1
+rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 leap.log "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb  >/dev/null 2>&1
 
 cd ..
+
