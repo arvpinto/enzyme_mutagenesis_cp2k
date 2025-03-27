@@ -9,28 +9,35 @@ if [ $# -ne 5 ]; then
     exit 1
 fi
 
+### Check if required files exist
+for file in "../$3" "$4" "$5"; do
+    [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
+done
+
 ### Variables list
 res_num="$1"
 res_type="$2"
 wt_topology="$3"
 mut_topology="$4"
 qm_selection="$5"
+
 ### Set backbone and sidechain variables for QM layer check
 res_sel=""
 bb_found=true
 sc_found=true
 bb_atoms_found=()
 sc_atoms_not_found=()
+
 ### Extract backbone and sidechain information regarding the WT and mutation residues
-res_name=$(cpptraj -p ../"$wt_topology" --resmask :"$res_num" | tail -n 1 | awk '{print $2}')
-bb_atoms_wt=$(cpptraj -p ../"$wt_topology" --mask :"$res_num"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
+res_name=$(cpptraj -p ../"$wt_topology" --resmask :"$res_num" | awk 'END{print $2}')
+bb_atoms_wt=$(cpptraj -p ../"$wt_topology" --mask :"$res_num"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | awk 'NR>1{print $2}')
 if [ "$res_name" != "GLY" ]; then
-        sc_atoms_wt=$(cpptraj -p ../"$wt_topology" --mask ":"$res_num"&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3)" | tail -n +2 |  awk '{print $2}')
+        sc_atoms_wt=$(cpptraj -p ../"$wt_topology" --mask ":"$res_num"&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3)" | awk 'NR>1{print $2}')
 fi
-atom_names_wt=$(grep -o '(name[^)]*resname '"$res_name"' and resid '"$res_num"'[^)]*)' "$qm_selection" | sed -E 's/\(name ([^)]*)and resname '"$res_name"' and resid '"$res_num"'\)/\1/')
-bb_atoms_mut=$(cpptraj -p "$mut_topology" --mask :"$res_num"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | tail -n +2 |  awk '{print $2}')
+atom_names_wt=$(grep -oP "\(name [^)]+resname $res_name and resid $res_num[^)]*\)" "$qm_selection" | sed -E "s/\(name ([^)]*)and resname $res_name and resid $res_num\)/\1/" | tr -d '"')
+bb_atoms_mut=$(cpptraj -p "$mut_topology" --mask :"$res_num"@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3 | awk 'NR>1{print $2}')
 if [ "$res_type" != "GLY" ]; then
-        sc_atoms_mut=$(cpptraj -p "$mut_topology" --mask ":"$res_num"&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3)" | tail -n +2 |  awk '{print $2}')
+        sc_atoms_mut=$(cpptraj -p "$mut_topology" --mask ":"$res_num"&!(@CA,C,O,N,H1,H2,H3,H,HA,HA2,HA3)" | awk 'NR>1{print $2}')
 fi
 
 ### Check if backbone is completely inserted in the QM layer
@@ -52,13 +59,16 @@ done
 
 ### Insert full mutation backbone if WT backbone is completely inserted in the QM layer
 if $bb_found; then
+
         ### The backbone of GLY and PRO is considered as the full residue
         if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
                 res_sel="$(echo "$bb_atoms_mut" "$sc_atoms_mut")"
         else
                 res_sel="$(echo "$bb_atoms_mut")"
         fi
+
 else    ### Insert subset of atoms if backbone is incomplete in the QM layer
+
         ### GLY and PRO are handled differently to ensure a consistent QMMM layer when they are involved
         if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
 
@@ -79,13 +89,16 @@ fi
 
 ### Insert full mutation sidechain if WT sidechain is completely inserted in the QM layer
 if $sc_found; then
+
         ### GLY and PRO have already been processed
         if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
                 res_sel+=""
         else
                 res_sel+="$(echo " $sc_atoms_mut")"
         fi
+
 else    ### Insert subset of atoms if sidechain is incomplete in the QM layer
+
         if [ -n "${sc_atoms_not_found[*]}" ]; then
                 if [ "$res_type" == "GLY" ] || [ "$res_type" == "PRO" ]; then
                         res_sel+=""

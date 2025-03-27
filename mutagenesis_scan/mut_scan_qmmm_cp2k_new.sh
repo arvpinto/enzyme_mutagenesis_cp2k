@@ -9,7 +9,7 @@ if [ $# -ne 9 ]; then
     exit 1
 fi
 
-# Check if required files exist
+### Check if required files exist
 for file in "$1" "$3" "$4" "$5" "$7" "$8" "$9"; do
     [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
 done
@@ -61,7 +61,7 @@ RESTART_CELL .TRUE.
 &END EXT_RESTART
 EOF
 
-# Print progress bar
+### Print progress bar
 total=$(wc -l < $res_list)
 printf "\rProgress: |%s| %d%%" "$(printf '█%.0s' $(seq 0 0))$(printf ' %.0s' $(seq 0 50))" "$((0 * 100 / total))"
 counter=0
@@ -111,6 +111,7 @@ for resid in $(<$res_list); do
         ### Check if residue belongs in the QM layer
 	cp ../$qm_selection ./
 	if grep -q "resid $resid)" ../$qm_selection; then
+
 		### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
 		../mut_qm_sel.sh "$resid" "$scan_type" "$topology" "$scan_type"_"$resid".prmtop "$qm_selection"	
         fi

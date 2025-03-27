@@ -3,13 +3,13 @@
 shopt -s expand_aliases
 source ~/.bashrc
 
-# Check if the usage is correct
+### Check if the usage is correct
 if [ $# -ne 7 ]; then
     echo "Usage: $0 <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
     exit 1  
 fi
 
-# Check if required files exist
+### Check if required files exist
 for file in "$3" "$4" "$5" "$7"; do
     [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
 done
@@ -131,7 +131,7 @@ echo "joined.save('"$res_type"_"$res_num".prmtop', overwrite=True)" >> parmed_jo
 python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
-rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 leap.log "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb  >/dev/null 2>&1
+rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 leap.log "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb cpptraj_join.in >/dev/null 2>&1
 
 cd ..
 
