@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 shopt -s expand_aliases
 source ~/.bashrc
@@ -92,8 +92,6 @@ for resid in $(<$res_list); do
 			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 				cp ../"$qm_selection" ./
-    
-    			### Avoid open valence in the QM layer when deleting the sidechain
 			elif [[ " ${bb_atoms_found[@]} " =~ " N " ]] && [[ " ${bb_atoms_found[@]} " =~ " CA " ]]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O,CB) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 				echo "change CHARGE :"$resid"@CB 0" > parmed_boundary.in
@@ -111,7 +109,8 @@ for resid in $(<$res_list); do
 			fi
 		fi
 
-	else ### Residue is outside the QM layer
+	else 
+		### Residue is outside the QM layer
 		sed -i 's/strip :RES_TAG/strip :'"$resid"' parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 		### Update qm_selection
 		update_qm_selection "$resid"
