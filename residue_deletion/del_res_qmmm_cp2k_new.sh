@@ -163,11 +163,7 @@ for resid in $(<$res_list); do
 	### Update progress bar
    	filled=$((counter * 50 / total))
    	remaining=$((50 - filled))
-
-   	# Construct the bar using solid blocks
    	bar="$(printf '█%.0s' $(seq 0 $filled))$(printf ' %.0s' $(seq 0 $remaining))"
-
-   	# Print the progress bar with percentage
    	printf "\rProgress: |%s| %d%%" "$bar" "$((counter * 100 / total))"
 
 done
