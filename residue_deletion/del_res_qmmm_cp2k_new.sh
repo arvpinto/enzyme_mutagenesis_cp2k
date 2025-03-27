@@ -21,6 +21,7 @@ r_structure="${3%.pdb}"
 ts_structure="${4%.pdb}"
 cp2k_input="$5"
 qm_selection="$6"
+null_res=""
 
 ### Create CPPTRAJ input
 cat <<EOF > cpptraj_del.in
@@ -45,9 +46,8 @@ done < "$qm_selection"  | tr '\n' '+' | sed 's/+$//' | sed 's/+/ or /g' > temp &
 
 ### Create progress bar
 total=$(wc -l < $res_list) 
-printf "\rProgress: [%-50s] %d/%d" " " 0 "$total"
+printf "\rProgress: |%s| %d%%" "$(printf '█%.0s' $(seq 0 0))$(printf ' %.0s' $(seq 0 50))" "$((0 * 100 / total))"
 counter=0
-null_res=""
 
 ### Loop through each residue in the list
 for resid in $(<$res_list); do
@@ -161,7 +161,14 @@ for resid in $(<$res_list); do
         cd ..
 
 	### Update progress bar
-        printf "\rProgress: [%-50s] %d/%d" $(printf '#%.0s' $(seq 1 $((counter * 50 / total)))) $counter $total
+   	filled=$((counter * 50 / total))
+   	remaining=$((50 - filled))
+
+   	# Construct the bar using solid blocks
+   	bar="$(printf '█%.0s' $(seq 0 $filled))$(printf ' %.0s' $(seq 0 $remaining))"
+
+   	# Print the progress bar with percentage
+   	printf "\rProgress: |%s| %d%%" "$bar" "$((counter * 100 / total))"
 
 done
 
