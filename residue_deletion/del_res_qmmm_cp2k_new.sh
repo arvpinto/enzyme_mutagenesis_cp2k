@@ -9,6 +9,11 @@ if [ $# -ne 6 ]; then
     exit 1
 fi
 
+# Check if required files exist
+for file in "$1" "$2" "$3" "$4" "$5" "$6"; do
+    [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
+done
+
 ### Variables list
 res_list="$1"
 topology="$2"
