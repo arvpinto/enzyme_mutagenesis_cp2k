@@ -94,7 +94,7 @@
         &END CELL
 
         &TOPOLOGY
-            COORD_FILE_FORMAT CRD
+            COORD_FILE_FORMAT PDB
             COORD_FILE_NAME R.pdb
 	    CONN_FILE_FORMAT AMBER
             CONN_FILE_NAME hpla2.prmtop
