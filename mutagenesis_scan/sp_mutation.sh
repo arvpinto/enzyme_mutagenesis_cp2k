@@ -52,10 +52,10 @@ mkdir "$res_type"_"$res_num"
 cd "$res_type"_"$res_num"
 
 ### Divide the PDB in two: protein and rest
-echo -e 'trajin ../'"$r_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$r_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
-echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$ts_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
-echo -e 'trajin ../'"$r_structure"'.pdb\nstrip '"$selection"' parmout rest.prmtop\ntrajout rest_'"$r_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
-echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip '"$selection"'\ntrajout rest_'"$ts_structure"'.pdb pdb' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$r_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$r_structure"'.pdb pdb noter' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip !'"$selection"'\ntrajout stripped_'"$ts_structure"'.pdb pdb noter' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$r_structure"'.pdb\nstrip '"$selection"' parmout rest.prmtop\ntrajout rest_'"$r_structure"'.pdb pdb noter' | cpptraj ../"$topology" >> cpptraj.log 2>&1
+echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip '"$selection"'\ntrajout rest_'"$ts_structure"'.pdb pdb noter' | cpptraj ../"$topology" >> cpptraj.log 2>&1
 
 ### Prepare PYMOL mutagenesis scripts
 echo "cmd.wizard(\"mutagenesis\")" >> pymol_mut_r.pml
