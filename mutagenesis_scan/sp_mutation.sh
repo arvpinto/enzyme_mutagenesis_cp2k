@@ -65,7 +65,7 @@ echo "cmd.get_wizard().set_hyd('none')" >> pymol_mut_r.pml
 echo "cmd.get_wizard().set_mode(\"$2\")" >> pymol_mut_r.pml 
 echo "cmd.get_wizard().do_select(\"$res_num/\")" >> pymol_mut_r.pml
 echo "cmd.get_wizard().apply()" >> pymol_mut_r.pml
-echo "set pdb_use_ter_records, 0" >> pymol_mut_r.pml
+echo "cmd.set('pdb_use_ter_records', 0)" >> pymol_mut_r.pml
 cp pymol_mut_r.pml pymol_mut_ts.pml
 echo "save "$res_type"_"$res_num"_"$r_structure".pdb" >> pymol_mut_r.pml
 echo "save "$res_type"_"$res_num"_"$ts_structure".pdb" >> pymol_mut_ts.pml
@@ -99,8 +99,8 @@ sed -i 's/.*saveamberparm.*/saveamberparm m '"$res_type"'_'"$res_num"'_'"$ts_str
 ### If CYX is mutated, the other CYX from the bridge is changed to CYS
 cys_pair=$(grep "."$res_num".SG" leap_"$res_type"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
 if [[ -n "$cys_pair" ]]; then
-	echo -e "trajin "$res_type"_"$res_num"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$r_structure".pdb
-	echo -e "trajin "$res_type"_"$res_num"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$ts_structure".pdb
+	echo -e "trajin "$res_type"_"$res_num"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$r_structure".pdb
+	echo -e "trajin "$res_type"_"$res_num"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$ts_structure".pdb
 	sed -i '/.'"$res_num"'.SG/d' leap_"$res_type"_*.in
 fi
 
@@ -131,7 +131,7 @@ echo "joined.save('"$res_type"_"$res_num".prmtop', overwrite=True)" >> parmed_jo
 python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
-rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 leap.log "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb cpptraj_join.in >/dev/null 2>&1
+rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb cpptraj_join.in >/dev/null 2>&1
 
 cd ..
 
