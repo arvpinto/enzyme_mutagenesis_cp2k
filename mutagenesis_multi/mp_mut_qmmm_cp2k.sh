@@ -5,15 +5,20 @@ source ~/.bashrc
 
 ### Check if the usage is correct
 if [ $# -ne 9 ]; then
-    echo "Usage: ./mp_mut_qmmm_cp2k.sh <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <selection_free>"
+    echo "Usage: $0 <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <selection_free>"
     exit 1 
 fi
+
+### Check if required files exist
+for file in "$1" "$2" "$3" "$4" "$6" "$7" "$8" "$9"; do
+    [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
+done
 
 ### Variables list
 mut_list="$1"
 topology="$2"
-r_structure=$(echo "$3" | sed 's/.pdb//')
-ts_structure=$(echo "$4" | sed 's/.pdb//')
+r_structure="${3%.pdb}"
+ts_structure="${4%.pdb}"
 selection="$5"
 leap_input="$6"
 cp2k_input="$7"
@@ -96,40 +101,42 @@ RESTART_CELL .TRUE.
 EOF
 
 ### Print progress bar
-total=$(cat $mut_list | wc -l) ; printf "\rProgress: [%-50s] %d/%d" " " 0 $total
+### Print progress bar
+total=$(wc -l < $mut_list)
+printf "\rProgress: |%s| %d%%" "$(printf '█%.0s' $(seq 0 0))$(printf ' %.0s' $(seq 0 50))" "$((0 * 100 / total))"
 counter=0
 
 ### Loop through each mutant
-for i in $(cat $mut_list | awk '{print $1}'); do
+for resid in $(awk '{print $1}' "$mut_list"); do
         ((counter++))
 	
 	### Get list of mutations
-	res_list=$(grep "$i" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
+	res_list=$(grep "$resid" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 	echo "$res_list" > res_list.dat
 
 	### Run the mp_mutation.sh script to create the mutated topology and coordinates	
-	./mp_mutation.sh "$i" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
+	./mp_mutation.sh "$resid" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
 	### Transfer the CP2K template and section inputs to the mutant directory 
-	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$i"/opt_md_res_"$r_structure".inp
-	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/md_res_"$r_structure".inp
-	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/opt_res_"$r_structure".inp
-	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$i"/sp_res_"$r_structure".inp
-	cp "$i"/opt_md_res_"$r_structure".inp "$i"/opt_md_res_"$ts_structure".inp
-	cp "$i"/md_res_"$r_structure".inp "$i"/md_res_"$ts_structure".inp
-	cp "$i"/opt_res_"$r_structure".inp "$i"/opt_res_"$ts_structure".inp
-	cp "$i"/sp_res_"$r_structure".inp "$i"/sp_res_"$ts_structure".inp
-	cp motion_md.inc motion_opt.inc "$i"/
-	cp motion_opt.inc "$i"/motion_opt_md.inc
-	cp extrest.inc "$i"/md_extrest_"$r_structure".inc
-        cp extrest.inc "$i"/md_extrest_"$ts_structure".inc
-	cp extrest.inc "$i"/opt_extrest_"$r_structure".inc
-        cp extrest.inc "$i"/opt_extrest_"$ts_structure".inc
-	cp extrest.inc "$i"/sp_extrest_"$r_structure".inc
-	cp extrest.inc "$i"/sp_extrest_"$ts_structure".inc
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$resid"/opt_md_res_"$r_structure".inp
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$resid"/md_res_"$r_structure".inp
+	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$resid"/opt_res_"$r_structure".inp
+	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$resid"/sp_res_"$r_structure".inp
+	cp "$resid"/opt_md_res_"$r_structure".inp "$resid"/opt_md_res_"$ts_structure".inp
+	cp "$resid"/md_res_"$r_structure".inp "$resid"/md_res_"$ts_structure".inp
+	cp "$resid"/opt_res_"$r_structure".inp "$resid"/opt_res_"$ts_structure".inp
+	cp "$resid"/sp_res_"$r_structure".inp "$resid"/sp_res_"$ts_structure".inp
+	cp motion_md.inc motion_opt.inc "$resid"/
+	cp motion_opt.inc "$resid"/motion_opt_md.inc
+	cp extrest.inc "$resid"/md_extrest_"$r_structure".inc
+        cp extrest.inc "$resid"/md_extrest_"$ts_structure".inc
+	cp extrest.inc "$resid"/opt_extrest_"$r_structure".inc
+        cp extrest.inc "$resid"/opt_extrest_"$ts_structure".inc
+	cp extrest.inc "$resid"/sp_extrest_"$r_structure".inc
+	cp extrest.inc "$resid"/sp_extrest_"$ts_structure".inc
 
 	### Enter the mutant directory
-	cd "$i"/
+	cd "$resid"/
 	
 	### Modify the CP2K section inputs	
 	sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_MD_'"$r_structure"'/' opt_md_res_"$r_structure".inp
@@ -140,10 +147,10 @@ for i in $(cat $mut_list | awk '{print $1}'); do
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp 
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$r_structure"'/' sp_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$ts_structure"'/' sp_res_"$ts_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$r_structure"'.rst7/g' opt_md_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$i"'_'"$ts_structure"'.rst7/g' opt_md_res_"$ts_structure".inp
-	sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$i"'.prmtop/g' *_res_*.inp
-	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$i"'.prmtop/g' *_res_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$resid"'_'"$r_structure"'.rst7/g' opt_md_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$resid"'_'"$ts_structure"'.rst7/g' opt_md_res_"$ts_structure".inp
+	sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$resid"'.prmtop/g' *_res_*.inp
+	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$resid"'.prmtop/g' *_res_*.inp
 	sed -i 's/MUT_SCAN/MUT_SCAN_OPT_MD_'"$r_structure"'-1.restart/' md_extrest_"$r_structure".inc
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_MD_'"$ts_structure"'-1.restart/' md_extrest_"$ts_structure".inc
 	sed -i 's/MUT_SCAN/MUT_SCAN_MD_'"$r_structure"'-1.restart/' opt_extrest_"$r_structure".inc
@@ -166,13 +173,13 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 
 	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant and the residues specified by the cutoff
 	if [[ -n "$selection_free" ]]; then
-		free_mask=$(grep "$i" ../"$selection_free" | awk '{ $1=""; print $0 }')
+		free_mask=$(grep "$resid" ../"$selection_free" | awk '{ $1=""; print $0 }')
 		free_list=$(cpptraj -p ../"$topology" -y ../"$ts_structure".pdb -c ../"$ts_structure".pdb --mask "$free_mask" | tail -n +2 | awk '{print $1}' | tr '\n' '+')
 	fi
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(index '"$(echo "$free_list")"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
-	pymol -d "load "$i".prmtop, mysystem ;load "$i"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
+	pymol -d "load "$resid".prmtop, mysystem ;load "$resid"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
         ### Check if any residue belongs in the QM layer
@@ -182,25 +189,28 @@ for i in $(cat $mut_list | awk '{print $1}'); do
 		res_type=$(echo "$res" | sed 's/[^a-zA-Z]//g')
         	if grep -q "resid $res_num)" $qm_selection; then
 			### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-			../mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$i".prmtop "$qm_selection"	
+			../mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$resid".prmtop "$qm_selection"	
         	fi
 
 	done
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
-        vmd "$i".prmtop "$i"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > vmd.log 2>&1
+        vmd "$resid".prmtop "$resid"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > vmd.log 2>&1
 
         ### Change the QM charge of the input
         qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
         sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' *_res_*.inp
 
 	### Clean up
-	#rm pymol_fixed_atoms.pml qm_charge.dat fixed_atoms.dat
+	rm pymol_fixed_atoms.pml qm_charge.dat fixed_atoms.dat
 	
 	cd ..
 
 	### Update progress bar
-	printf "\rProgress: [%-50s] %d/%d" $(printf '#%.0s' $(seq 1 $((counter * 50 / total)))) $counter $total
+        filled=$((counter * 50 / total))
+        remaining=$((50 - filled))
+        bar="$(printf '█%.0s' $(seq 0 $filled))$(printf ' %.0s' $(seq 0 $remaining))"
+        printf "\rProgress: |%s| %d%%" "$bar" "$((counter * 100 / total))"
 
 done
 
