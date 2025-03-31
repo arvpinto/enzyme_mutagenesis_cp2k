@@ -131,7 +131,7 @@ echo "joined.save('"$res_type"_"$res_num".prmtop', overwrite=True)" >> parmed_jo
 python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
-rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb cpptraj_join.in >/dev/null 2>&1
+#rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$res_type"_"$res_num"_*.rst7 "$res_type"_"$res_num"_*.prmtop rest.prmtop rest_*.pdb cpptraj_join.in >/dev/null 2>&1
 
 cd ..
 

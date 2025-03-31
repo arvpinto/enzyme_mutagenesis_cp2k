@@ -110,7 +110,7 @@ for resid in $(<$res_list); do
         fi
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
-        vmd "$scan_type"_"$resid".prmtop "$scan_type"_"$resid"_"$r_structure".rst7 -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > vmd.log 2>&1
+        vmd "$scan_type"_"$resid".prmtop "$scan_type"_"$resid"_"$r_structure".pdb -e ../vmd_forceeval.tcl -dispdev none < $qm_selection > vmd.log 2>&1
 
         ### Change the QM charge of the input
         qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
@@ -126,7 +126,7 @@ for resid in $(<$res_list); do
         	echo 'cmd.iterate("!(resi '"$resid"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	fi
         echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
-        pymol -d "load "$scan_type"_"$resid".prmtop, mysystem ;load "$scan_type"_"$resid"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
+        pymol -d "load "$scan_type"_"$resid".prmtop, mysystem ;load "$scan_type"_"$resid"_"$r_structure".pdb, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
         awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
         ### Clean up
