@@ -100,7 +100,7 @@ if $sc_found; then
 
 	### Deal with broken dissulfide bridges
 	if [ "$res_name" == "CYX" ]; then 
-        	cys_pair=$(grep "."$res_num".SG" ../"$leap_input" | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
+        	cys_pair=$(grep "."$res_num".SG" "$leap_input" | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
         	cys_atoms=$(grep -o '([^)]*)' "$qm_selection" | grep "resid "$cys_pair"" | sed 's/.*name \([^)]*\) and resname.*/\1/')
         	cys_atoms+=" HG "
         	grep -o '([^)]*)' "$qm_selection" | grep -v '(name[^)]*resname '"$res_name"' and resid '"$cys_pair"'[^)]*)' | tr '\n' ' ' | sed 's/) (/) or (/g' > temp && mv temp "$qm_selection"
