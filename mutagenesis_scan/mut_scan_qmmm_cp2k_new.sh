@@ -113,7 +113,7 @@ for resid in $(<$res_list); do
 	if grep -q "resid $resid)" ../$qm_selection; then
 
 		### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-		../mut_qm_sel.sh "$resid" "$scan_type" "$topology" "$scan_type"_"$resid".prmtop "$qm_selection"	
+		../mut_qm_sel.sh "$resid" "$scan_type" "$topology" "$scan_type"_"$resid".prmtop "$qm_selection"	"$leap_input"
         fi
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
