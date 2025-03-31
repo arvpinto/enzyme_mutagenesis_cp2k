@@ -86,7 +86,15 @@ echo -e 'trajin ../'"$ts_structure"'.pdb\nstrip '"$selection"'\ntrajout rest_'"$
 pymol stripped_"$r_structure".pdb -cq pymol_mut_r.pml >> pymol.log 2>&1
 pymol stripped_"$ts_structure".pdb -cq pymol_mut_ts.pml >> pymol.log 2>&1
 
-for i in $(cat ../$residue_list); do
+### Prepare leap inputs from template  
+cp ../"$leap_input" ./leap_"$mut_name"_r.in
+cp ../"$leap_input" ./leap_"$mut_name"_ts.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$r_structure"'.pdb/g' leap_"$mut_name"_r.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$mut_name"_ts.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$mut_name"_r.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$mut_name"_ts.in
+
+for resid in $(cat ../$residue_list); do
 
 	res_num=$(echo "$resid" | sed 's/[^0-9]//g')
         res_type=$(echo "$resid" | sed 's/[^a-zA-Z]//g')
@@ -103,23 +111,15 @@ for i in $(cat ../$residue_list); do
 	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
 	fi
 
+	### If CYX is mutated, the other CYX from the bridge is changed to CYS
+	cys_pair=$(grep "."$res_num".SG" leap_"$mut_name"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
+	if [[ -n "$cys_pair" ]]; then
+	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
+	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
+	        sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
+	fi
+
 done
-
-### Prepare leap inputs from template 
-cp ../"$leap_input" ./leap_"$mut_name"_r.in
-cp ../"$leap_input" ./leap_"$mut_name"_ts.in
-sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$r_structure"'.pdb/g' leap_"$mut_name"_r.in
-sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$mut_name"_ts.in
-sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$mut_name"_r.in
-sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$mut_name"_ts.in
-
-### If CYX is mutated, the other CYX from the bridge is changed to CYS
-cys_pair=$(grep "."$res_num".SG" leap_"$mut_name"_r.in | sed 's/.'"$mut_name"'.SG//g' | sed 's/[^0-9]//g')
-if [[ -n "$cys_pair" ]]; then
-	echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
-	echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
-	sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
-fi
 
 ### Run leap inputs to generate topologies
 tleap -f leap_"$mut_name"_r.in >> leap.log 2>&1

@@ -189,7 +189,7 @@ for resid in $(awk '{print $1}' "$mut_list"); do
 		res_type=$(echo "$res" | sed 's/[^a-zA-Z]//g')
         	if grep -q "resid $res_num)" $qm_selection; then
 			### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-			../mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$resid".prmtop "$qm_selection"	
+			../mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$resid".prmtop "$qm_selection" ../"$leap_input"
         	fi
 
 	done
