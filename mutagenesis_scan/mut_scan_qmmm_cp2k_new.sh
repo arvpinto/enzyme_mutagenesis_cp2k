@@ -101,16 +101,9 @@ for resid in $(<$res_list); do
         echo -e "\n@INCLUDE scan_extrest_"$r_structure".inc" >> scan_res_"$r_structure".inp
         echo -e "\n@INCLUDE scan_extrest_"$ts_structure".inc" >> scan_res_"$ts_structure".inp
 
-        ### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant
-        echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
-        echo 'cmd.iterate("!(resi '"$resid"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
-        echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
-        pymol -d "load "$scan_type"_"$resid".prmtop, mysystem ;load "$scan_type"_"$resid"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
-        awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
-
         ### Check if residue belongs in the QM layer
 	cp ../$qm_selection ./
-	if grep -q "resid $resid)" ../$qm_selection; then
+	if grep -q "resid $resid)" ../"$qm_selection"; then
 
 		### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
 		../mut_qm_sel.sh "$resid" "$scan_type" "$topology" "$scan_type"_"$resid".prmtop "$qm_selection"	../"$leap_input"
@@ -122,6 +115,19 @@ for resid in $(<$res_list); do
         ### Change the QM charge of the input
         qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
         sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' *_res_*.inp
+
+        ### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant
+        echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
+	### The CYS resulting from a broken disulfide is not fixed
+	if grep -q "resid $resid)" ../$qm_selection && [[ -n $(grep "."$resid".SG" ../"$leap_input") ]]; then
+		cys_pair=$(grep "."$resid".SG" ../"$leap_input" | sed 's/.'"$resid"'.SG//g' | sed 's/[^0-9]//g')
+		echo 'cmd.iterate("!(resi '"$resid"+"$cys_pair"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
+	else
+        	echo 'cmd.iterate("!(resi '"$resid"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
+	fi
+        echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
+        pymol -d "load "$scan_type"_"$resid".prmtop, mysystem ;load "$scan_type"_"$resid"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
+        awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
         ### Clean up
         rm pymol_fixed_atoms.pml qm_charge.dat fixed_atoms.dat

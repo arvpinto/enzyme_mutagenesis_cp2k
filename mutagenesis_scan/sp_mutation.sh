@@ -76,6 +76,14 @@ echo "quit" >> pymol_mut_ts.pml
 pymol stripped_"$r_structure".pdb -cq pymol_mut_r.pml >> pymol.log 2>&1
 pymol stripped_"$ts_structure".pdb -cq pymol_mut_ts.pml >> pymol.log 2>&1
 
+### Prepare leap inputs from template
+cp ../"$leap_input" ./leap_"$res_type"_r.in
+cp ../"$leap_input" ./leap_"$res_type"_ts.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$res_type"'_'"$res_num"'_'"$r_structure"'.pdb/g' leap_"$res_type"_r.in
+sed -i 's/.*loadpdb.*/m = loadpdb '"$res_type"'_'"$res_num"'_'"$ts_structure"'.pdb/g' leap_"$res_type"_ts.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$res_type"'_'"$res_num"'_'"$r_structure"'.prmtop '"$res_type"'_'"$res_num"'_'"$r_structure"'.rst7/g' leap_"$res_type"_r.in
+sed -i 's/.*saveamberparm.*/saveamberparm m '"$res_type"'_'"$res_num"'_'"$ts_structure"'.prmtop '"$res_type"'_'"$res_num"'_'"$ts_structure"'.rst7/g' leap_"$res_type"_ts.in
+
 ### Change protonation states back to the intended
 if [ "$res_type" = "ASH" ]; then
 		echo -e "trajin "$res_type"_"$res_num"_"$r_structure".pdb\nchange resname from :"$res_num" to ASH\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$r_structure".pdb
@@ -87,14 +95,6 @@ elif [ "$res_type" = "LYN" ]; then
                 echo -e "trajin "$res_type"_"$res_num"_"$r_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$r_structure".pdb >> cpptraj.log 2>&1 ;  mv trajout.pdb "$res_type"_"$res_num"_"$r_structure".pdb
                 echo -e "trajin "$res_type"_"$res_num"_"$ts_structure".pdb\nchange resname from :"$res_num" to LYN\ntrajout trajout.pdb\nrun\nquit" | cpptraj "$res_type"_"$res_num"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$res_type"_"$res_num"_"$ts_structure".pdb
 fi
-
-### Prepare leap inputs from template 
-cp ../"$leap_input" ./leap_"$res_type"_r.in
-cp ../"$leap_input" ./leap_"$res_type"_ts.in
-sed -i 's/.*loadpdb.*/m = loadpdb '"$res_type"'_'"$res_num"'_'"$r_structure"'.pdb/g' leap_"$res_type"_r.in
-sed -i 's/.*loadpdb.*/m = loadpdb '"$res_type"'_'"$res_num"'_'"$ts_structure"'.pdb/g' leap_"$res_type"_ts.in
-sed -i 's/.*saveamberparm.*/saveamberparm m '"$res_type"'_'"$res_num"'_'"$r_structure"'.prmtop '"$res_type"'_'"$res_num"'_'"$r_structure"'.rst7/g' leap_"$res_type"_r.in
-sed -i 's/.*saveamberparm.*/saveamberparm m '"$res_type"'_'"$res_num"'_'"$ts_structure"'.prmtop '"$res_type"'_'"$res_num"'_'"$ts_structure"'.rst7/g' leap_"$res_type"_ts.in
 
 ### If CYX is mutated, the other CYX from the bridge is changed to CYS
 cys_pair=$(grep "."$res_num".SG" leap_"$res_type"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
