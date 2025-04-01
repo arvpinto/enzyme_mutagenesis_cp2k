@@ -75,7 +75,7 @@ for resid in $(<$res_list); do
         ((counter++))
 
         ### Run the sp_mutation.sh script to create the mutated topology and coordinates
-        ./sp_mutation.sh "$resid" "$scan_type" "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
+        sp_mutation.sh "$resid" "$scan_type" "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
         ### Transfer the CP2K template and section inputs to the mutant directory
         sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input > "$scan_type"_"$resid"/opt_res_"$r_structure".inp
@@ -110,7 +110,7 @@ for resid in $(<$res_list); do
 	if grep -q "resid $resid)" ../"$qm_selection"; then
 
 		### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-		../mut_qm_sel.sh "$resid" "$scan_type" "$topology" "$scan_type"_"$resid".prmtop "$qm_selection"	../"$leap_input"
+		mut_qm_sel.sh "$resid" "$scan_type" "$topology" "$scan_type"_"$resid".prmtop "$qm_selection"	../"$leap_input"
         fi
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
