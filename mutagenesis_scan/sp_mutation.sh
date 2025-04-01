@@ -3,6 +3,11 @@
 shopt -s expand_aliases
 source ~/.bashrc
 
+### Check for required packages
+command -v pymol >/dev/null 2>&1 || { echo "Error: pymol is not installed or not in PATH." >&2; exit 1; }
+command -v cpptraj >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
+command -v tleap >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
+
 ### Check if the usage is correct
 if [ $# -ne 7 ]; then
     echo "Usage: $0 <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
@@ -40,11 +45,11 @@ fi
 
 ### Deal with ASH, GLH and LYN protonation states
 if [ "$res_type" = "ASH" ]; then
-	set -- "$1" "ASP" "$3" "$4" "$5" "$6"
+	set -- "$1" "ASP" "$3" "$4" "$5" "$6" "$7"
 elif [ "$res_type" = "GLH" ]; then
-	set -- "$1" "GLU" "$3" "$4" "$5" "$6"
+	set -- "$1" "GLU" "$3" "$4" "$5" "$6" "$7"
 elif [ "$res_type" = "LYN" ]; then
-	set -- "$1" "LYS" "$3" "$4" "$5" "$6"
+	set -- "$1" "LYS" "$3" "$4" "$5" "$6" "$7"
 fi
 
 ### Create mutant directory
