@@ -148,7 +148,7 @@ for resid in $(<$res_list); do
 	fi
 
 	### Run VMD with the vmd_forceeval.tcl script to get the definition of the QM layer from the qm_selection
-        vmd res_"$resid".prmtop res_"$resid"_"$r_structure".pdb -e ../vmd_forceeval.tcl -dispdev none < "$qm_selection" > vmd.log 2>&1
+        vmd res_"$resid".prmtop res_"$resid"_"$r_structure".pdb -e "$VMD_QMMM_SCRIPT" -dispdev none < "$qm_selection" > vmd.log 2>&1
 
  	### Get QM charge and replace in the CP2K inputs
 	qm_charge=$(awk '{print int($1)}' qm_charge.dat)
