@@ -11,8 +11,14 @@ fi
 
 ### Check if required files exist
 for file in "$1" "$2" "$3" "$4" "$6" "$7" "$8" "$9"; do
-    [[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
+	[[ -f "$file" ]] || { echo "Error: Missing required file $file!" >&2; exit 1; }
 done
+
+### Check if <mutant_list> and <selection_free> have the same number of lines
+if [[ "$(cat $1 | wc -l)" -ne "$(cat $9 | wc -l)" ]]; then
+	echo "$1 and $9 have a different number of variants"
+	exit 1
+fi
 
 ### Variables list
 mut_list="$1"
