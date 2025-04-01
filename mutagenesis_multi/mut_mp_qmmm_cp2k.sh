@@ -125,7 +125,7 @@ for resid in $(awk '{print $1}' "$mut_list"); do
 	echo "$res_list" > res_list.dat
 
 	### Run the mp_mutation.sh script to create the mutated topology and coordinates	
-	./mp_mutation.sh "$resid" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
+	mp_mutation.sh "$resid" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
 	### Transfer the CP2K template and section inputs to the mutant directory 
 	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$resid"/opt_md_res_"$r_structure".inp
@@ -199,7 +199,7 @@ for resid in $(awk '{print $1}' "$mut_list"); do
 		res_type=$(echo "$res" | sed 's/[^a-zA-Z]//g')
         	if grep -q "resid $res_num)" $qm_selection; then
 			### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-			../mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$resid".prmtop "$qm_selection" ../"$leap_input"
+			mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$resid".prmtop "$qm_selection" ../"$leap_input"
         	fi
 
 	done
