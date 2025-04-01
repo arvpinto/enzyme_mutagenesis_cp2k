@@ -3,6 +3,11 @@
 shopt -s expand_aliases
 source ~/.bashrc
 
+### Check for required packages
+command -v pymol >/dev/null 2>&1 || { echo "Error: pymol is not installed or not in PATH." >&2; exit 1; }
+command -v vmd >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
+command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or not in PATH." >&2; exit 1; }
+
 ### Check if the usage is correct
 if [ $# -ne 9 ]; then
     echo "Usage: $0 <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <selection_free>"
@@ -15,7 +20,7 @@ for file in "$1" "$2" "$3" "$4" "$6" "$7" "$8" "$9"; do
 done
 
 ### Check if <mutant_list> and <selection_free> have the same number of lines
-if [[ "$(cat $1 | wc -l)" -ne "$(cat $9 | wc -l)" ]]; then
+if [[ $(wc -l < "$1") -ne $(wc -l < "$9") ]]; then
 	echo "$1 and $9 have a different number of variants"
 	exit 1
 fi
