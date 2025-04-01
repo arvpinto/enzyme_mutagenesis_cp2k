@@ -107,7 +107,6 @@ RESTART_CELL .TRUE.
 EOF
 
 ### Print progress bar
-### Print progress bar
 total=$(wc -l < $mut_list)
 printf "\rProgress: |%s| %d%%" "$(printf '█%.0s' $(seq 0 0))$(printf ' %.0s' $(seq 0 50))" "$((0 * 100 / total))"
 counter=0

@@ -5,7 +5,7 @@ source ~/.bashrc
 
 # Check if the usage is correct
 if [ $# -ne 7 ]; then
-    echo "Usage: $0 <mut_name> <residue_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
+    echo "Usage: $0 <mut_name> <res_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
     exit 1  
 fi
 
@@ -16,7 +16,7 @@ done
 
 ### Variables list
 mut_name="$1"
-residue_list="$2"
+res_list="$2"
 topology="$3"
 r_structure="${4%.pdb}"
 ts_structure="${5%.pdb}"
@@ -30,7 +30,7 @@ cd "$mut_name"
 echo "cmd.wizard(\"mutagenesis\")" >> pymol_mut_r.pml
 
 ### Loop through each mutation in the list
-for resid in $(cat ../$residue_list); do
+for resid in $(<$res_list); do
 
 	res_num=$(echo "$resid" | sed 's/[^0-9]//g')
 	res_type=$(echo "$resid" | sed 's/[^a-zA-Z]//g')
@@ -94,7 +94,7 @@ sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$
 sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$mut_name"_r.in
 sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$mut_name"_ts.in
 
-for resid in $(cat ../$residue_list); do
+for resid in $(<$res_list); do
 
 	res_num=$(echo "$resid" | sed 's/[^0-9]//g')
         res_type=$(echo "$resid" | sed 's/[^a-zA-Z]//g')
@@ -113,7 +113,7 @@ for resid in $(cat ../$residue_list); do
 
 	### If CYX is mutated, the other CYX from the bridge is changed to CYS
 	cys_pair=$(grep "."$res_num".SG" leap_"$mut_name"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
-	if [[ -n "$cys_pair" ]] && cat ../"$residue_list" | sed 's/[^0-9]//g' | grep -w -q "$cys_pair"; then
+	if [[ -n "$cys_pair" ]] && cat ../"$res_list" | sed 's/[^0-9]//g' | grep -w -q "$cys_pair"; then
 		sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
 	elif [[ -n "$cys_pair" ]] ; then
 	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
