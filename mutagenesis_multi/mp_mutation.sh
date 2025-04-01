@@ -113,7 +113,9 @@ for resid in $(cat ../$residue_list); do
 
 	### If CYX is mutated, the other CYX from the bridge is changed to CYS
 	cys_pair=$(grep "."$res_num".SG" leap_"$mut_name"_r.in | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
-	if [[ -n "$cys_pair" ]]; then
+	if [[ -n "$cys_pair" ]] && cat ../"$residue_list" | sed 's/[^0-9]//g' | grep -w -q "$cys_pair"; then
+		sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
+	elif [[ -n "$cys_pair" ]] ; then
 	        echo -e "trajin "$mut_name"_"$r_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$r_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$r_structure".pdb
 	        echo -e "trajin "$mut_name"_"$ts_structure".pdb\nchange resname from :"$cys_pair" to CYS\ntrajout trajout.pdb noter\nrun\nquit" | cpptraj "$mut_name"_"$ts_structure".pdb >> cpptraj.log 2>&1 ; mv trajout.pdb "$mut_name"_"$ts_structure".pdb
 	        sed -i '/.'"$res_num"'.SG/d' leap_"$mut_name"_*.in
@@ -151,6 +153,6 @@ python parmed_join.py >> parmed.log 2>&1
 python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
-#rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$mut_name"_*.pdb leap.log "$mut_name"_*.prmtop  >/dev/null 2>&1
+rm stripped_*.pdb pymol_mut_*.pml parmed_join.py leap_*_*.in "$mut_name"_*.pdb leap.log "$mut_name"_*.prmtop  >/dev/null 2>&1
 
 cd ..
