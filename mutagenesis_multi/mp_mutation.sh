@@ -10,7 +10,7 @@ command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or
 
 # Check if the usage is correct
 if [ $# -ne 7 ]; then
-    echo "Usage: $0 <mut_name> <res_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
+    echo "Usage: ./mp_mutation.sh <mut_name> <res_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
     exit 1  
 fi
 
