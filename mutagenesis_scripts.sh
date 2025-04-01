@@ -12,4 +12,4 @@ chmod +x "$DEL_RES_DIR/del_res_qmmm_cp2k.sh" "$DEL_RES_DIR/mol2_vmd-qmsel.sh" "$
 export PATH="$DEL_RES_DIR:$PATH"
 export PATH="$MUT_SCAN_DIR:$PATH"
 export PATH="$MUT_MULTI_DIR:$PATH"
-
+export VMD_QMMM_SCRIPT="$MUT_SCAN_DIR/vmd_forceeval.tcl"
