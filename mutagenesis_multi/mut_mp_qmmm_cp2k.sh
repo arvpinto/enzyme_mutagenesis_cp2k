@@ -10,7 +10,7 @@ command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or
 
 ### Check if the usage is correct
 if [ $# -ne 9 ]; then
-    echo "Usage: $0 <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <selection_free>"
+    echo "Usage: ./mut_mp_qmmm_cp2k.sh <mutant_list> <topology> <reactant_structure> <ts_structure> <selection> <leap_template> <cp2k_template> <qm_selection> <selection_free>"
     exit 1 
 fi
 
