@@ -10,7 +10,7 @@ command -v tleap >/dev/null 2>&1 || { echo "Error: tleap is not installed or not
 
 ### Check if the usage is correct
 if [ $# -ne 7 ]; then
-    echo "Usage: $0 <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
+    echo "Usage: ./sp_mutation.sh <number> <residue> <topology> <reactant_structure> <ts_structure> <selection> <leap_template>"
     exit 1  
 fi
 
