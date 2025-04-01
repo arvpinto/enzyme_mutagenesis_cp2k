@@ -185,7 +185,7 @@ for resid in $(awk '{print $1}' "$mut_list"); do
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(index '"$(echo "$free_list")"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
-	pymol -d "load "$resid".prmtop, mysystem ;load "$resid"_"$r_structure".rst7, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
+	pymol -d "load "$resid".prmtop, mysystem ;load "$resid"_"$r_structure".pdb, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
         ### Check if any residue belongs in the QM layer
