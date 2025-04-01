@@ -3,6 +3,11 @@
 shopt -s expand_aliases
 source ~/.bashrc
 
+### Check for required packages
+command -v parmed >/dev/null 2>&1 || { echo "Error: parmed is not installed or not in PATH." >&2; exit 1; }
+command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or not in PATH." >&2; exit 1; }
+command -v vmd >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
+
 ### Check if usage is correct
 if [ $# -ne 6 ]; then
     echo "Usage: $0 <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
