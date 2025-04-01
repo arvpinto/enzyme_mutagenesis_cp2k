@@ -98,16 +98,6 @@ if $sc_found; then
                 res_sel+="$(echo " $sc_atoms_mut")"
         fi
 
-	### Deal with broken dissulfide bridges
-	if [ "$res_name" == "CYX" ]; then 
-        	cys_pair=$(grep "."$res_num".SG" "$leap_input" | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
-        	cys_atoms=$(grep -o '([^)]*)' "$qm_selection" | grep "resid "$cys_pair"" | sed 's/.*name \([^)]*\) and resname.*/\1/')
-        	cys_atoms+=" HG "
-        	grep -o '([^)]*)' "$qm_selection" | grep -v '(name[^)]*resname '"$res_name"' and resid '"$cys_pair"'[^)]*)' | tr '\n' ' ' | sed 's/) (/) or (/g' > temp && mv temp "$qm_selection"
-        	echo -n "or (name "$cys_atoms" and resname CYS and resid "$cys_pair")" >> "$qm_selection"
-	fi
-
-
 else    ### Insert subset of atoms if sidechain is incomplete in the QM layer
 
         if [ -n "${sc_atoms_not_found[*]}" ]; then
@@ -129,3 +119,14 @@ if [ -n "$(echo "$res_sel" | xargs)" ]; then
         echo -n "or (name "$res_sel" and resname "$res_type" and resid "$res_num")" >> $qm_selection
 fi
 
+### Deal with breaking dissulfide bridges and changing the pair to CYS
+if [ "$res_name" == "CYX" ]; then
+        cys_pair=$(grep "."$res_num".SG" "$leap_input" | sed 's/.'"$res_num"'.SG//g' | sed 's/[^0-9]//g')
+	cys_pair_name=$(cpptraj -p "$mut_topology" --resmask :"$cys_pair" | awk 'END{print $2}')
+	if [ "$cys_pair_name" == "CYS" ]; then
+        	cys_atoms=$(grep -o '([^)]*)' "$qm_selection" | grep "resid "$cys_pair"" | sed 's/.*name \([^)]*\) and resname.*/\1/')
+        	cys_atoms+=" HG "
+        	grep -o '([^)]*)' "$qm_selection" | grep -v '(name[^)]*resname '"$res_name"' and resid '"$cys_pair"'[^)]*)' | tr '\n' ' ' | sed 's/) (/) or (/g' > temp && mv temp "$qm_selection"
+        	echo -n "or (name "$cys_atoms" and resname CYS and resid "$cys_pair")" >> "$qm_selection"
+	fi
+fi
