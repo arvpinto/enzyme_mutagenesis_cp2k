@@ -46,19 +46,19 @@
 
 <br>
 
-The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/mp_mut_qmmm_cp2k.sh" target="_blank">mp_mut_qmmm_cp2k.sh</a> script has the following usage:
+The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/mut_mp_qmmm_cp2k.sh" target="_blank">mut_mp_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
-./mp_mut_qmmm_cp2k.sh &lt;mutant_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt; &lt;selection_free&gt;
+./mut_mp_qmmm_cp2k.sh &lt;mutant_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt; &lt;selection_free&gt;
     
-user@machine:~$ ./mp_mut_qmmm_cp2k.sh mut_list.dat hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat selection_free.dat
+user@machine:~$ ./mut_mp_qmmm_cp2k.sh mut_list.dat hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat selection_free.dat
 </pre>
 
 <p align="justify">It prepares a directory for each mutant variant in the list where the input files for CP2K will be output. A given mutant variant can be specified as &lt;name&gt; &lt;number&gt;&lt;residue&gt; in the file mutant variant list (e.g. MUT_001 41LYS 53ASP 74GLU 92ASP). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce molecular dynamics, geometry optimization and single-point point energy input files. The &lt;selection_free&gt; argument requires a file containing cpptraj selections for each mutant variant, specifying the atoms that remain unfrozen (e.g. MUT_001 (:41,53,74,92&amp;!@N,H,CA,HA,C,O)&lt;:3).</p>
 
 <br/>
     
-<p align="justify">To generate the structures and topology of the mutated enzyme, the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/mp_mutation.sh" target="_blank">mp_mutation.sh</a> script is called by the mut_scan_qmmm_cp2k.sh script and has the following syntax:</p>
+<p align="justify">To generate the structures and topology of the mutated enzyme, the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi/mp_mutation.sh" target="_blank">mp_mutation.sh</a> script is called by the mut_mp_qmmm_cp2k.sh script and has the following syntax:</p>
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./mp_mutation.sh &lt;mut_name&gt; &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt;
