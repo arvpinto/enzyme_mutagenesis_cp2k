@@ -4,7 +4,7 @@ shopt -s expand_aliases
 source ~/.bashrc
 
 ### Check for required packages
-command -v cpptraj >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
+command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or not in PATH." >&2; exit 1; }
 
 ### Check if the usage is correct
 if [ $# -ne 6 ]; then
