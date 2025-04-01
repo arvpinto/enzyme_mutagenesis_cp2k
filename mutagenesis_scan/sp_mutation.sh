@@ -5,8 +5,8 @@ source ~/.bashrc
 
 ### Check for required packages
 command -v pymol >/dev/null 2>&1 || { echo "Error: pymol is not installed or not in PATH." >&2; exit 1; }
-command -v cpptraj >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
-command -v tleap >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in PATH." >&2; exit 1; }
+command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or not in PATH." >&2; exit 1; }
+command -v tleap >/dev/null 2>&1 || { echo "Error: tleap is not installed or not in PATH." >&2; exit 1; }
 
 ### Check if the usage is correct
 if [ $# -ne 7 ]; then
