@@ -4,7 +4,7 @@
 SCRIPTS_DIR="$PWD/scripts"
 
 ### Give executable permissions
-chmod +x "$SCRIPTS_DIR/*.sh" 
+chmod +x "$SCRIPTS_DIR"/*.sh
 
 ### Export the directories to PATH
 export PATH="$SCRIPTS_DIR:$PATH"
