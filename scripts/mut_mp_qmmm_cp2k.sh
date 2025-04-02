@@ -117,36 +117,36 @@ printf "\rProgress: |%s| %d%%" "$(printf '█%.0s' $(seq 0 0))$(printf ' %.0s' $
 counter=0
 
 ### Loop through each mutant
-for resid in $(awk '{print $1}' "$mut_list"); do
+for mutant in $(awk '{print $1}' "$mut_list"); do
         ((counter++))
 	
 	### Get list of mutations
-	res_list=$(grep "$resid" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
+	res_list=$(grep "$mutant" $mut_list | awk '{ $1=""; print $0 }' | sed -e 's/ /\n/g')
 	echo "$res_list" > res_list.dat
 
 	### Run the mp_mutation.sh script to create the mutated topology and coordinates	
-	mp_mutation.sh "$resid" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
+	mp_mutation.sh "$mutant" res_list.dat "$topology" "$r_structure".pdb "$ts_structure".pdb "$selection" "$leap_input"
 
 	### Transfer the CP2K template and section inputs to the mutant directory 
-	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$resid"/opt_md_res_"$r_structure".inp
-	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$resid"/md_res_"$r_structure".inp
-	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$resid"/opt_res_"$r_structure".inp
-	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$resid"/sp_res_"$r_structure".inp
-	cp "$resid"/opt_md_res_"$r_structure".inp "$resid"/opt_md_res_"$ts_structure".inp
-	cp "$resid"/md_res_"$r_structure".inp "$resid"/md_res_"$ts_structure".inp
-	cp "$resid"/opt_res_"$r_structure".inp "$resid"/opt_res_"$ts_structure".inp
-	cp "$resid"/sp_res_"$r_structure".inp "$resid"/sp_res_"$ts_structure".inp
-	cp motion_md.inc motion_opt.inc "$resid"/
-	cp motion_opt.inc "$resid"/motion_opt_md.inc
-	cp extrest.inc "$resid"/md_extrest_"$r_structure".inc
-        cp extrest.inc "$resid"/md_extrest_"$ts_structure".inc
-	cp extrest.inc "$resid"/opt_extrest_"$r_structure".inc
-        cp extrest.inc "$resid"/opt_extrest_"$ts_structure".inc
-	cp extrest.inc "$resid"/sp_extrest_"$r_structure".inc
-	cp extrest.inc "$resid"/sp_extrest_"$ts_structure".inc
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' > "$mutant"/opt_md_res_"$r_structure".inp
+	sed '/&DFT/,/&END DFT/d' $cp2k_input | sed '/&QMMM/,/&END QMMM/d' | sed 's/METHOD QMMM/METHOD FIST/' | sed 's/RUN_TYPE ENERGY/RUN_TYPE MD/' | sed 's/MUT_SCAN/MUT_SCAN_MD/' | sed -e 'N;/BASIS_SET/ d' | sed '/POTENTIAL/{N;d;}' | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$mutant"/md_res_"$r_structure".inp
+	sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input | sed -e '/CELL/,/CELL/d' | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$mutant"/opt_res_"$r_structure".inp
+	sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$mutant"/sp_res_"$r_structure".inp
+	cp "$mutant"/opt_md_res_"$r_structure".inp "$mutant"/opt_md_res_"$ts_structure".inp
+	cp "$mutant"/md_res_"$r_structure".inp "$mutant"/md_res_"$ts_structure".inp
+	cp "$mutant"/opt_res_"$r_structure".inp "$mutant"/opt_res_"$ts_structure".inp
+	cp "$mutant"/sp_res_"$r_structure".inp "$mutant"/sp_res_"$ts_structure".inp
+	cp motion_md.inc motion_opt.inc "$mutant"/
+	cp motion_opt.inc "$mutant"/motion_opt_md.inc
+	cp extrest.inc "$mutant"/md_extrest_"$r_structure".inc
+        cp extrest.inc "$mutant"/md_extrest_"$ts_structure".inc
+	cp extrest.inc "$mutant"/opt_extrest_"$r_structure".inc
+        cp extrest.inc "$mutant"/opt_extrest_"$ts_structure".inc
+	cp extrest.inc "$mutant"/sp_extrest_"$r_structure".inc
+	cp extrest.inc "$mutant"/sp_extrest_"$ts_structure".inc
 
 	### Enter the mutant directory
-	cd "$resid"/
+	cd "$mutant"/
 	
 	### Modify the CP2K section inputs	
 	sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_MD_'"$r_structure"'/' opt_md_res_"$r_structure".inp
@@ -157,10 +157,10 @@ for resid in $(awk '{print $1}' "$mut_list"); do
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp 
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$r_structure"'/' sp_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_SP_'"$ts_structure"'/' sp_res_"$ts_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$resid"'_'"$r_structure"'.pdb/g' opt_md_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$resid"'_'"$ts_structure"'.pdb/g' opt_md_res_"$ts_structure".inp
-	sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$resid"'.prmtop/g' *_res_*.inp
-	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$resid"'.prmtop/g' *_res_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$mutant"'_'"$r_structure"'.pdb/g' opt_md_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$mutant"'_'"$ts_structure"'.pdb/g' opt_md_res_"$ts_structure".inp
+	sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$mutant"'.prmtop/g' *_res_*.inp
+	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$mutant"'.prmtop/g' *_res_*.inp
 	sed -i 's/MUT_SCAN/MUT_SCAN_OPT_MD_'"$r_structure"'-1.restart/' md_extrest_"$r_structure".inc
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_MD_'"$ts_structure"'-1.restart/' md_extrest_"$ts_structure".inc
 	sed -i 's/MUT_SCAN/MUT_SCAN_MD_'"$r_structure"'-1.restart/' opt_extrest_"$r_structure".inc
@@ -183,13 +183,13 @@ for resid in $(awk '{print $1}' "$mut_list"); do
 
 	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant and the residues specified by the cutoff
 	if [[ -n "$selection_free" ]]; then
-		free_mask=$(grep "$resid" ../"$selection_free" | awk '{ $1=""; print $0 }')
-		free_list=$(cpptraj -p ../"$topology" -y ../"$ts_structure".pdb -c ../"$ts_structure".pdb --mask "$free_mask" | tail -n +2 | awk '{print $1}' | tr '\n' '+')
+		free_mask=$(grep "$mutant" ../"$selection_free" | awk '{ $1=""; print $0 }')
+		free_list=$(cpptraj -p "$mutant".prmtop -y "$mutant"_"$ts_structure".pdb -c "$mutant"_"$ts_structure".pdb --mask "$free_mask" | tail -n +2 | awk '{print $1}' | tr '\n' '+')
 	fi
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(index '"$(echo "$free_list")"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
 	echo 'open("fixed_atoms.dat", "w").write("\n".join(fixed_atoms) + "\n")' >> pymol_fixed_atoms.pml
-	pymol -d "load "$resid".prmtop, mysystem ;load "$resid"_"$r_structure".pdb, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
+	pymol -d "load "$resid".prmtop, mysystem ;load "$mutant"_"$r_structure".pdb, mysystem" -c -e pymol_fixed_atoms.pml >> pymol.log 2>&1
 	awk 'NR % 100 == 1 {if (NR > 1) print ""; printf "LIST "} {printf "%s ", $0} END {print ""}' fixed_atoms.dat > fixed_atoms.inc
 
         ### Check if any residue belongs in the QM layer
@@ -199,13 +199,13 @@ for resid in $(awk '{print $1}' "$mut_list"); do
 		res_type=$(echo "$res" | sed 's/[^a-zA-Z]//g')
         	if grep -q "resid $res_num)" $qm_selection; then
 			### Run the mut_qm_sel.sh script to replace the WT by the mutated residue in the $qm_selection file
-			mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$resid".prmtop "$qm_selection" ../"$leap_input"
+			mut_qm_sel.sh "$res_num" "$res_type" "$topology" "$mutant".prmtop "$qm_selection" ../"$leap_input"
         	fi
 
 	done
 
         ### Run the vmd_forceeval.tcl script to the the QMMM section for CP2K
-        vmd "$resid".prmtop "$resid"_"$r_structure".pdb -e "$VMD_QMMM_SCRIPT" -dispdev none < $qm_selection > vmd.log 2>&1
+        vmd "$mutant".prmtop "$mutant"_"$r_structure".pdb -e "$VMD_QMMM_SCRIPT" -dispdev none < $qm_selection > vmd.log 2>&1
 
         ### Change the QM charge of the input
         qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
