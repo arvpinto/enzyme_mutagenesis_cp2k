@@ -56,7 +56,7 @@ GEO_OPT 100
 &END MOTION
 EOF
 
-cat <<EOF > scan_extrest.inc
+cat <<EOF > sp_extrest.inc
 &EXT_RESTART
 RESTART_FILE_NAME MUT_SCAN
 RESTART_DEFAULT .FALSE.
@@ -83,8 +83,8 @@ for resid in $(<$res_list); do
         sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$scan_type"_"$resid"/sp_res_"$r_structure".inp
         cp "$scan_type"_"$resid"/sp_res_"$r_structure".inp "$scan_type"_"$resid"/sp_res_"$ts_structure".inp
         cp motion_opt.inc "$scan_type"_"$resid"/
-        cp scan_extrest.inc "$scan_type"_"$resid"/scan_extrest_"$r_structure".inc
-        cp scan_extrest.inc "$scan_type"_"$resid"/scan_extrest_"$ts_structure".inc
+        cp sp_extrest.inc "$scan_type"_"$resid"/sp_extrest_"$r_structure".inc
+        cp sp_extrest.inc "$scan_type"_"$resid"/sp_extrest_"$ts_structure".inc
 
         ### Enter the mutant directory
         cd "$scan_type"_"$resid"/
@@ -98,12 +98,12 @@ for resid in $(<$res_list); do
         sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$ts_structure"'.rst7/g' opt_res_"$ts_structure".inp
         sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$scan_type"'_'"$resid"'.prmtop/g' *_res_*.inp
         sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$scan_type"'_'"$resid"'.prmtop/g' *_res_*.inp
-        sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$r_structure"'-1.restart/' scan_extrest_"$r_structure".inc
-        sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$ts_structure"'-1.restart/' scan_extrest_"$ts_structure".inc
+        sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$r_structure"'-1.restart/' sp_extrest_"$r_structure".inc
+        sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$ts_structure"'-1.restart/' sp_extrest_"$ts_structure".inc
         echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$r_structure".inp
         echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$ts_structure".inp
-        echo -e "\n@INCLUDE scan_extrest_"$r_structure".inc" >> sp_res_"$r_structure".inp
-        echo -e "\n@INCLUDE scan_extrest_"$ts_structure".inc" >> sp_res_"$ts_structure".inp
+        echo -e "\n@INCLUDE sp_extrest_"$r_structure".inc" >> sp_res_"$r_structure".inp
+        echo -e "\n@INCLUDE sp_extrest_"$ts_structure".inc" >> sp_res_"$ts_structure".inp
 
         ### Check if residue belongs in the QM layer
 	cp ../$qm_selection ./
@@ -149,5 +149,5 @@ done
 echo ""
 
 ### Clean up
-rm motion_opt.inc scan_extrest.inc
+rm motion_opt.inc sp_extrest.inc
 
