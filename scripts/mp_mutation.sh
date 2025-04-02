@@ -158,6 +158,6 @@ python parmed_join.py >> parmed.log 2>&1
 python parmed_join.py >> parmed.log 2>&1
 
 ### Clean up
-rm stripped_*.pdb rest_* pymol_mut_*.pml parmed_join.py leap_*_*.in "$mut_name"_*.rst7 leap.log "$mut_name"_*.prmtop cpptraj_join.in >/dev/null 2>&1
+rm stripped_*.pdb rest* pymol_mut_*.pml parmed_join.py leap_*_*.in "$mut_name"_*.rst7 leap.log "$mut_name"_*.prmtop cpptraj_join.in >/dev/null 2>&1
 
 cd ..
