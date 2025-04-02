@@ -94,8 +94,8 @@ for resid in $(<$res_list); do
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_'"$r_structure"'/' sp_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_'"$ts_structure"'/' sp_res_"$ts_structure".inp
-	sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$r_structure"'.rst7/g' opt_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$ts_structure"'.rst7/g' opt_res_"$ts_structure".inp
+	sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$r_structure"'.pdb/g' opt_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$ts_structure"'.pdb/g' opt_res_"$ts_structure".inp
         sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$scan_type"'_'"$resid"'.prmtop/g' *_res_*.inp
         sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME '"$scan_type"'_'"$resid"'.prmtop/g' *_res_*.inp
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$r_structure"'-1.restart/' sp_extrest_"$r_structure".inc
