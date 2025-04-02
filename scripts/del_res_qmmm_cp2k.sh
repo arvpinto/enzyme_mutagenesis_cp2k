@@ -98,7 +98,7 @@ for resid in $(<$res_list); do
 				cd ..
 				continue
 
-			### If there are backbone atoms, delete the sidechain
+			### If there are backbone atoms, delete the sidechainscan_res
 			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 				cp ../"$qm_selection" ./
@@ -128,8 +128,8 @@ for resid in $(<$res_list); do
 	
 	### ### Copy CPPTRAJ and CP2K inputs
         cp cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in
-        cp ../$cp2k_input del_res_"$r_structure".inp
-        cp ../$cp2k_input del_res_"$ts_structure".inp
+        cp ../$cp2k_input sp_res_"$r_structure".inp
+        cp ../$cp2k_input sp_res_"$ts_structure".inp
 
  	### Replace TAG's in CPPTRAJ inputs
 	sed -i 's/PRMTOP_TAG/'"$topology"'/g' cpptraj_del_*.in
@@ -152,13 +152,13 @@ for resid in $(<$res_list); do
 
  	### Get QM charge and replace in the CP2K inputs
 	qm_charge=$(awk '{print int($1)}' qm_charge.dat)
-	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' del_res_*.inp
+	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' sp_res_*.inp
 
 	### Replace TAG's in CP2K inputs
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$resid"'_'"$r_structure"'.pdb/g' del_res_"$r_structure".inp
-        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$resid"'_'"$ts_structure"'.pdb/g' del_res_"$ts_structure".inp
-        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$resid"'.prmtop/g' del_res_*.inp
-	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$resid"'.prmtop/g' del_res_*.inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$resid"'_'"$r_structure"'.pdb/g' sp_res_"$r_structure".inp
+        sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME res_'"$resid"'_'"$ts_structure"'.pdb/g' sp_res_"$ts_structure".inp
+        sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME res_'"$resid"'.prmtop/g' sp_res_*.inp
+	sed -i 's/CONN_FILE_NAME.*/CONN_FILE_NAME res_'"$resid"'.prmtop/g' sp_res_*.inp
 
 	### Clean up
 	rm cpptraj_del_"$r_structure".in cpptraj_del_"$ts_structure".in qm_charge.dat 
