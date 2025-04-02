@@ -80,8 +80,8 @@ for resid in $(<$res_list); do
         ### Transfer the CP2K template and section inputs to the mutant directory
         sed 's/RUN_TYPE ENERGY/RUN_TYPE GEO_OPT/' $cp2k_input > "$scan_type"_"$resid"/opt_res_"$r_structure".inp
         cp "$scan_type"_"$resid"/opt_res_"$r_structure".inp "$scan_type"_"$resid"/opt_res_"$ts_structure".inp
-        sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$scan_type"_"$resid"/scan_res_"$r_structure".inp
-        cp "$scan_type"_"$resid"/scan_res_"$r_structure".inp "$scan_type"_"$resid"/scan_res_"$ts_structure".inp
+        sed -e '/CELL/,/CELL/d' $cp2k_input | sed '/COORD_FILE_FORMAT/d' | sed '/COORD_FILE_NAME/d' > "$scan_type"_"$resid"/sp_res_"$r_structure".inp
+        cp "$scan_type"_"$resid"/sp_res_"$r_structure".inp "$scan_type"_"$resid"/sp_res_"$ts_structure".inp
         cp motion_opt.inc "$scan_type"_"$resid"/
         cp scan_extrest.inc "$scan_type"_"$resid"/scan_extrest_"$r_structure".inc
         cp scan_extrest.inc "$scan_type"_"$resid"/scan_extrest_"$ts_structure".inc
@@ -92,8 +92,8 @@ for resid in $(<$res_list); do
         ### Modify the CP2K section inputs
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$r_structure"'/' opt_res_"$r_structure".inp
         sed -i 's/PROJECT.*/PROJECT MUT_SCAN_OPT_'"$ts_structure"'/' opt_res_"$ts_structure".inp
-        sed -i 's/PROJECT.*/PROJECT MUT_SCAN_'"$r_structure"'/' scan_res_"$r_structure".inp
-        sed -i 's/PROJECT.*/PROJECT MUT_SCAN_'"$ts_structure"'/' scan_res_"$ts_structure".inp
+        sed -i 's/PROJECT.*/PROJECT MUT_SCAN_'"$r_structure"'/' sp_res_"$r_structure".inp
+        sed -i 's/PROJECT.*/PROJECT MUT_SCAN_'"$ts_structure"'/' sp_res_"$ts_structure".inp
 	sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$r_structure"'.rst7/g' opt_res_"$r_structure".inp
         sed -i 's/COORD_FILE_NAME.*/COORD_FILE_NAME '"$scan_type"'_'"$resid"'_'"$ts_structure"'.rst7/g' opt_res_"$ts_structure".inp
         sed -i 's/PARM_FILE_NAME.*/PARM_FILE_NAME '"$scan_type"'_'"$resid"'.prmtop/g' *_res_*.inp
@@ -102,8 +102,8 @@ for resid in $(<$res_list); do
         sed -i 's/MUT_SCAN/MUT_SCAN_OPT_'"$ts_structure"'-1.restart/' scan_extrest_"$ts_structure".inc
         echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$r_structure".inp
         echo -e "\n@INCLUDE motion_opt.inc" >> opt_res_"$ts_structure".inp
-        echo -e "\n@INCLUDE scan_extrest_"$r_structure".inc" >> scan_res_"$r_structure".inp
-        echo -e "\n@INCLUDE scan_extrest_"$ts_structure".inc" >> scan_res_"$ts_structure".inp
+        echo -e "\n@INCLUDE scan_extrest_"$r_structure".inc" >> sp_res_"$r_structure".inp
+        echo -e "\n@INCLUDE scan_extrest_"$ts_structure".inc" >> sp_res_"$ts_structure".inp
 
         ### Check if residue belongs in the QM layer
 	cp ../$qm_selection ./
