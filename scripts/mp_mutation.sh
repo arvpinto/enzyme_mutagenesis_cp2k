@@ -99,6 +99,7 @@ sed -i 's/.*loadpdb.*/m = loadpdb '"$mut_name"'_'"$ts_structure"'.pdb/g' leap_"$
 sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$r_structure"'.prmtop '"$mut_name"'_'"$r_structure"'.rst7/g' leap_"$mut_name"_r.in
 sed -i 's/.*saveamberparm.*/saveamberparm m '"$mut_name"'_'"$ts_structure"'.prmtop '"$mut_name"'_'"$ts_structure"'.rst7/g' leap_"$mut_name"_ts.in
 
+### Loop through each mutation in the list
 for resid in $(<../"$res_list"); do
 
 	res_num=$(echo "$resid" | sed 's/[^0-9]//g')
