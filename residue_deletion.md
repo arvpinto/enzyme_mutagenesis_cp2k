@@ -62,7 +62,7 @@ user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+
 
 Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
-user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
+user@machine:~$ mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
 
 <br/>
@@ -70,7 +70,7 @@ user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
-./del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
+del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
     
 user@machine:~$ ./del_res_qmmm_cp2k.sh residue_list.dat hpla2_ee.prmtop R.pdb TS.pdb cp2k_template.inp qm_selection.dat
 </pre>
@@ -80,7 +80,7 @@ user@machine:~$ ./del_res_qmmm_cp2k.sh residue_list.dat hpla2_ee.prmtop R.pdb TS
 
 The calculations can then be run using a for loop:
 <pre style="color: white; background-color: black;">
-user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i del_res_R.inp -o del_res_R.out ; cp2k.popt -i del_res_TS.inp -o del_res_TS.out ; cd .. ; done
+user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i sp_res_R.inp -o sp_res_R.out ; cp2k.popt -i sp_res_TS.inp -o sp_res_TS.out ; cd .. ; done
 </pre>
 
 <br/>
@@ -92,7 +92,7 @@ user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i del_res_R.inp -o del_r
 After running the single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue deletion:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/del_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/del_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_del.dat
+user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/sp_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/sp_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_del.dat
 </pre>
 
 <br/>
