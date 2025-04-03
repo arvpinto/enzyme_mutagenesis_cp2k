@@ -1,40 +1,39 @@
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import os  # Added to extract filenames
+import os  
 
 def read_data(file_path):
-    """Reads data from a file and returns labels and values."""
-    labels = []
-    values = []
+    """Reads data from a file and returns a dictionary of residue-value pairs."""
+    data = {}
     with open(file_path, 'r') as file:
         for line in file:
             parts = line.split()
-            labels.append(parts[0])
-            values.append(float(parts[1]))
-    return labels, values
+            if len(parts) != 2:
+                continue  # Skip malformed lines
+            try:
+                data[parts[0]] = float(parts[1])
+            except ValueError:
+                continue  # Skip lines where the value isn't a valid float
+    return data
 
-def plot_data(labels, values1, values2, filename1, filename2):
-    """Plots side-by-side bar charts for comparison."""
+def plot_data(common_labels, values1, values2, filename1, filename2):
+    """Plots side-by-side bar charts for common residues."""
     plt.figure(figsize=(12, 6))
 
     wt = 14.8  # Reference Energy Barrier
-    x_positions = np.arange(len(labels))  # X-axis positions
-    bar_width = 0.4  # Width of each bar
+    x_positions = np.arange(len(common_labels))  # X-axis positions
+    bar_width = 0.4  
 
-    # Define colors for both datasets
     colors1 = ['salmon' if v < wt else 'tomato' for v in values1]
     colors2 = ['cornflowerblue' if v < wt else 'royalblue' for v in values2]
 
-    # Plot bars side by side
     plt.bar(x_positions - bar_width/2, values1, width=bar_width, color=colors1, label=filename1)
     plt.bar(x_positions + bar_width/2, values2, width=bar_width, color=colors2, label=filename2)
 
-    # Add reference line
     plt.axhline(y=wt, color='grey', linestyle='--', linewidth=1, alpha=0.5)
 
-    # Adjust x-axis labels
-    plt.xticks(x_positions, labels, rotation=90)
+    plt.xticks(x_positions, common_labels, rotation=90)
 
     plt.xlabel('Residue Number')
     plt.ylabel('Δ$E$ / kcal·mol$^{-1}$')
@@ -51,16 +50,21 @@ if __name__ == '__main__':
     file1_path = sys.argv[1]
     file2_path = sys.argv[2]
 
-    # Extract just the filenames (without full path) for legend
     filename1 = os.path.basename(file1_path)
     filename2 = os.path.basename(file2_path)
 
-    labels1, values1 = read_data(file1_path)
-    labels2, values2 = read_data(file2_path)
+    data1 = read_data(file1_path)
+    data2 = read_data(file2_path)
 
-    if labels1 != labels2:
-        print("Error: Residue numbers do not match between files.")
+    # Find common residues
+    common_residues = sorted(set(data1.keys()) & set(data2.keys()), key=int)
+
+    if not common_residues:
+        print("Error: No common residues found between files.")
         sys.exit(1)
 
-    plot_data(labels1, values1, values2, filename1, filename2)
+    values1 = [data1[res] for res in common_residues]
+    values2 = [data2[res] for res in common_residues]
+
+    plot_data(common_residues, values1, values2, filename1, filename2)
 
