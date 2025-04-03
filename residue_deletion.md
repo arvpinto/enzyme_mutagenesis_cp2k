@@ -39,7 +39,7 @@
 <br/>
 Open the system in VMD, save a *.gro file and a serial_numbers.dat file with the serial numbers of a selection:
 <pre style="color: white; background-color: black;">
-user@machine:~$ vmd hpla2.prmtop R.pdb
+<span style="color: #9966CC;">user@machine:~$</span> vmd hpla2.prmtop R.pdb
 # save a *.gro file of the system
 animate write gro system.gro 
 # make a VMD selection
@@ -52,17 +52,17 @@ puts $output $serial_numbers
 close $output
 quit
 # replace spaces by + for a PYMOL compatible selection
-user@machine:~$ sed -i 's/ /+/g' serial_numbers.dat 
+<span style="color: #9966CC;">user@machine:~$</span> sed -i 's/ /+/g' serial_numbers.dat 
 </pre>
 
 The *.gro file can then be opened in PYMOL, the selection introduced and a HL.mol2 file exported:
 <pre style="color: white; background-color: black;">
-user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+ serial_numbers.dat); save HL.mol2, my_selection"
+<span style="color: #9966CC;">user@machine:~$</span> pymol -cq system.gro -d "select my_selection, index $(paste -sd+ serial_numbers.dat); save HL.mol2, my_selection"
 </pre>
 
 Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
-user@machine:~$ mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
+<span style="color: #9966CC;">user@machine:~$</span> mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
 
 <br/>
@@ -72,7 +72,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/del_res_
 <pre style="color: white; background-color: black;">
 <span style="color: #FF3366; font-weight: bold;">del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;</span>
     
-<span style="color: #9966CC;"user@machine:~$</span> del_res_qmmm_cp2k.sh residue_list.dat hpla2_ee.prmtop R.pdb TS.pdb cp2k_template.inp qm_selection.dat
+<span style="color: #9966CC;">user@machine:~$</span> del_res_qmmm_cp2k.sh residue_list.dat hpla2_ee.prmtop R.pdb TS.pdb cp2k_template.inp qm_selection.dat
 </pre>
 <p align="justify"> The script creates a directory for each residue in the list, where the CP2K input files will be generated. It processes the provided topology and structures using CPPTRAJ to remove the specified residues. To maintain the QM/MM configuration, the backbone of boundary residues is preserved while only their sidechains are deleted (GLY and PRO residues at the QM/MM boundary are not deleted). Since residue deletion alters atom numbering, the QM/MM settings must be updated accordingly after each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. </p>
 
@@ -80,7 +80,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/del_res_
 
 The calculations can then be run using a for loop:
 <pre style="color: white; background-color: black;">
-user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i sp_res_R.inp -o sp_res_R.out ; cp2k.popt -i sp_res_TS.inp -o sp_res_TS.out ; cd .. ; done
+<span style="color: #9966CC;">user@machine:~$</span> for i in RES_*; do cd "$i" ; cp2k.popt -i sp_res_R.inp -o sp_res_R.out ; cp2k.popt -i sp_res_TS.inp -o sp_res_TS.out ; cd .. ; done
 </pre>
 
 <br/>
@@ -92,7 +92,7 @@ user@machine:~$ for i in RES_*; do cd "$i" ; cp2k.popt -i sp_res_R.inp -o sp_res
 After running the single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue deletion:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/sp_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/sp_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_del.dat
+<span style="color: #9966CC;">user@machine:~$</span> paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/sp_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in RES_*; do echo $(grep "Total FORCE" "$i"/sp_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_del.dat
 </pre>
 
 <br/>
@@ -100,7 +100,7 @@ user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(
 The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/hpla2_example/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
+<span style="color: #9966CC;">user@machine:~$</span> python E_diff_bar_plot.py energy_differences_del.dat
 </pre>
 
 <div align="center">
@@ -114,7 +114,7 @@ user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 <p align="justify">For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/hpla2_example/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:</p>
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1982 34854
+<span style="color: #9966CC;">user@machine:~$</span> python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1982 34854
 </pre>
 
 <div align="center">
