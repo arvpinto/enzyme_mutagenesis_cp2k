@@ -22,6 +22,11 @@
 <br>
 <br>
 The protocols can be downloaded from here <a href="https://github.com/arvpinto/enzyme_mutagenesis_cp2k/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>.
+<br>
+After unzipping the file, go to the enzyme_mutagenesis_cp2k-main directory and run this command to install the scripts:
+<pre style="color: white; background-color: black;">
+user@machine:~$ source mutagenesis_scripts.sh
+</pre>
 </p>
 
 ---
