@@ -117,7 +117,7 @@ for resid in $(<$res_list); do
         vmd "$scan_type"_"$resid".prmtop "$scan_type"_"$resid"_"$r_structure".pdb -e "$VMD_QMMM_SCRIPT" -dispdev none < $qm_selection > vmd.log 2>&1
 
         ### Change the QM charge of the input
-        qm_charge=$(printf "%.0f\n" `cat qm_charge.dat`)
+        qm_charge=$(awk '{print sprintf("%.0f", $1)}' qm_charge.dat)
         sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' *_res_*.inp
 
         ### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant
