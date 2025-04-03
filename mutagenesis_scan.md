@@ -49,7 +49,7 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mut_scan
 <pre style="color: white; background-color: black;">
 mut_scan_qmmm_cp2k.sh &lt;residue_list&gt; &lt;scan_type&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
 
-user@machine:~$ mut_scan_qmmm_cp2k.sh residue_list.dat GLY hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat
+<span style="color: #9966CC;">user@machine:~$</span> mut_scan_qmmm_cp2k.sh residue_list.dat GLY hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat
 </pre>
 
 <p align="justify">It prepares a directory for each residue in the list where the input files for CP2K will be output. The &lt;scan_type&gt; argument represents the three-letter code of the residue used in the scan. ALA and GLY are suitable for assessing sidechain contributions, whereas residues with greater volume and more degrees of freedom may complicate the analysis. Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme (its parameters are updated, while the rest of the system remains unchanged). The LEaP input should be consistent with the original parameterization. The cp2k_template.inp file is used to produce geometry optimization and single-point point energy input files.</p>
@@ -76,7 +76,7 @@ mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;qm_selection&g
 
 The calculations can then be run using a for loop:
 <pre style="color: white; background-color: black;">
-user@machine:~$ for i in GLY_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_res_R.out ; cp2k.popt -i sp_res_R.inp -o sp_res_R.out ; cp2k.popt -i opt_res_TS.inp -o opt_res_TS.out ; cp2k.popt -i sp_res_TS.inp -o sp_res_TS.out ; cd .. ; done
+<span style="color: #9966CC;">user@machine:~$</span> for i in GLY_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_res_R.out ; cp2k.popt -i sp_res_R.inp -o sp_res_R.out ; cp2k.popt -i opt_res_TS.inp -o opt_res_TS.out ; cp2k.popt -i sp_res_TS.inp -o sp_res_TS.out ; cd .. ; done
 </pre>
 
 <br/>
@@ -88,7 +88,7 @@ user@machine:~$ for i in GLY_*; do cd "$i" ; cp2k.popt -i opt_res_R.inp -o opt_r
 After running the optimization and single-point calculations, the following command allows us to extract the absolute energies and calculate the R->TS energy barrier for each residue mutation:
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ paste <(for i in GLY_*; do echo "$i" | sed 's/GLY_//g'; done) <(for i in GLY_*; do echo $(grep "Total FORCE" "$i"/sp_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in GLY_*; do echo $(grep "Total FORCE" "$i"/sp_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_mut.dat
+<span style="color: #9966CC;">user@machine:~$</span> paste <(for i in GLY_*; do echo "$i" | sed 's/GLY_//g'; done) <(for i in GLY_*; do echo $(grep "Total FORCE" "$i"/sp_res_TS.out | tail -n -1) ; done | awk '{print $9}') <(for i in GLY_*; do echo $(grep "Total FORCE" "$i"/sp_res_R.out | tail -n -1) ; done | awk '{print $9}') | awk '{print $1,($2-$3)*627.509}' | sort -n -k1,1 > energy_differences_mut.dat
 </pre>
 
 <br/>
@@ -96,7 +96,7 @@ user@machine:~$ paste <(for i in GLY_*; do echo "$i" | sed 's/GLY_//g'; done) <(
 <p align="justify">The energy barriers can be compared to the ones calculated with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" target="_blank">residue deletion protocol</a> using the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/hpla2_example/E_diff_comparison_bar_plot.py" target="_blank">E_diff_comparison_bar_plot.py</a> script:</p>
 
 <pre style="color: white; background-color: black;">
-user@machine:~$ python E_diff_comparison_bar_plot.py energy_differences_del.dat energy_differences_mut_gly.dat
+<span style="color: #9966CC;">user@machine:~$</span> python E_diff_comparison_bar_plot.py energy_differences_del.dat energy_differences_mut_gly.dat
 </pre>
 
 <div align="center">
