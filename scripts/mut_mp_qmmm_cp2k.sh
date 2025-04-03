@@ -184,7 +184,7 @@ for mutant in $(awk '{print $1}' "$mut_list"); do
 	### Create a list of residues to be fixed during optimization, consisting of all atoms excluding the mutant and the residues specified by the cutoff
 	if [[ -n "$selection_free" ]]; then
 		free_mask=$(grep "$mutant" ../"$selection_free" | awk '{ $1=""; print $0 }')
-		free_list=$(cpptraj -p "$mutant".prmtop -y "$mutant"_"$ts_structure".pdb -c "$mutant"_"$ts_structure".pdb --mask "$free_mask" | tail -n +2 | awk '{print $1}' | tr '\n' '+')
+		free_list=$(cpptraj -p "$mutant".prmtop -y "$mutant"_"$ts_structure".pdb -c "$mutant"_"$ts_structure".pdb --mask ''"$free_mask"'' | tail -n +2 | awk '{print $1}' | tr '\n' '+')
 	fi
 	echo 'fixed_atoms = []' > pymol_fixed_atoms.pml
 	echo 'cmd.iterate("!(index '"$(echo "$free_list")"')", "fixed_atoms.append(str(index))", space=locals())' >> pymol_fixed_atoms.pml
