@@ -47,7 +47,7 @@
 The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mut_scan_qmmm_cp2k.sh" target="_blank">mut_scan_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
-mut_scan_qmmm_cp2k.sh &lt;residue_list&gt; &lt;scan_type&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
+<span style="color: #FF3366; font-weight: bold;">mut_scan_qmmm_cp2k.sh &lt;residue_list&gt; &lt;scan_type&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;</span>
 
 <span style="color: #9966CC;">user@machine:~$</span> mut_scan_qmmm_cp2k.sh residue_list.dat GLY hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat
 </pre>
@@ -59,7 +59,7 @@ mut_scan_qmmm_cp2k.sh &lt;residue_list&gt; &lt;scan_type&gt; &lt;topology&gt; &l
 <p align="justify">To generate the structures and topology of the mutated enzyme, the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/sp_mutation.sh" target="_blank">sp_mutation.sh</a> script is called by the mut_scan_qmmm_cp2k.sh script and has the following syntax:</p>
 
 <pre style="color: white; background-color: black;">
-sp_mutation.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt;
+<span style="color: #FF3366; font-weight: bold;">sp_mutation.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt;</span>
 </pre>
 
 <br>
@@ -67,7 +67,7 @@ sp_mutation.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;reactant_stru
 <p align="justify">Since mutating residues changes the atom numbering, the QM/MM settings must be updated for each mutation. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mut_qm_sel.sh" target="_blank">mut_qm_sel.sh</a> script is called by the mut_scan_qmmm_cp2k.sh script to check how the mutated residue should be included in the QM layer and modify the qm_selection.dat file accordingly. It has the following usage:</p>
 
 <pre style="color: white; background-color: black;">
-mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;qm_selection&gt;
+<span style="color: #FF3366; font-weight: bold;">mut_qm_sel.sh &lt;number&gt; &lt;residue&gt; &lt;topology&gt; &lt;qm_selection&gt;</span>
 </pre>
  
 <p align="justify">The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the mut_scan_qmmm_cp2k.sh to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file.</p>
