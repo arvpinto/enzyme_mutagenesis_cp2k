@@ -36,7 +36,7 @@ strip :RES_TAG
 trajout res_RES_TAG_STATE_TAG.pdb
 EOF
 
-### Function to update qm_selection
+### Function to update $qm_selection
 update_qm_selection() {
 grep -oP '\(.*?\)' ../"$qm_selection" > "$qm_selection" 
 while read line; do
@@ -98,7 +98,7 @@ for resid in $(<$res_list); do
 				cd ..
 				continue
 
-			### If there are backbone atoms, delete the sidechainscan_res
+			### If there are backbone atoms, delete the sidechain
 			elif [[ " ${bb_atoms_found[@]} " =~ " C " ]] && [[ " ${bb_atoms_found[@]} " =~ " O " ]]; then
 				sed -i 's/strip :RES_TAG/strip :'"$resid"'\&!(@N,H,CA,HA,C,O) parmout res_'"$resid"'.prmtop/' cpptraj_del_"$r_structure".in
 				cp ../"$qm_selection" ./
@@ -147,7 +147,7 @@ for resid in $(<$res_list); do
 		rm parmed_boundary.in
 	fi
 
-	### Run VMD with the vmd_forceeval.tcl script to get the definition of the QM layer from the qm_selection
+	### Run VMD with the vmd_forceeval.tcl script to get the definition of the QM layer from the $qm_selection
         vmd res_"$resid".prmtop res_"$resid"_"$r_structure".pdb -e "$VMD_QMMM_SCRIPT" -dispdev none < "$qm_selection" > vmd.log 2>&1
 
  	### Get QM charge and replace in the CP2K inputs
