@@ -60,21 +60,21 @@ The *.gro file can then be opened in PYMOL, the selection introduced and a HL.mo
 user@machine:~$ pymol -cq system.gro -d "select my_selection, index $(paste -sd+ serial_numbers.dat); save HL.mol2, my_selection"
 </pre>
 
-Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
+Then the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mol2_vmd-qmsel.sh" target="_blank">mol2_vmd-qmsel.sh</a> script can be used to extract the selection in the required format:
 <pre style="color: white; background-color: black;">
 user@machine:~$ ./mol2_vmd-qmsel.sh HL.mol2 > qm_selection.dat
 </pre>
 
 <br/>
 
-The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
+The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/del_res_qmmm_cp2k.sh" target="_blank">del_res_qmmm_cp2k.sh</a> script has the following usage:
 
 <pre style="color: white; background-color: black;">
 ./del_res_qmmm_cp2k.sh &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;
     
 user@machine:~$ ./del_res_qmmm_cp2k.sh residue_list.dat hpla2_ee.prmtop R.pdb TS.pdb cp2k_template.inp qm_selection.dat
 </pre>
-<p align="justify"> The script creates a directory for each residue in the list, where the CP2K input files will be generated. It processes the provided topology and structures using CPPTRAJ to remove the specified residues. To maintain the QM/MM configuration, the backbone of boundary residues is preserved while only their sidechains are deleted (GLY and PRO residues at the QM/MM boundary are not deleted). Since residue deletion alters atom numbering, the QM/MM settings must be updated accordingly after each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. </p>
+<p align="justify"> The script creates a directory for each residue in the list, where the CP2K input files will be generated. It processes the provided topology and structures using CPPTRAJ to remove the specified residues. To maintain the QM/MM configuration, the backbone of boundary residues is preserved while only their sidechains are deleted (GLY and PRO residues at the QM/MM boundary are not deleted). Since residue deletion alters atom numbering, the QM/MM settings must be updated accordingly after each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. </p>
 
 <br/>
 
@@ -97,28 +97,28 @@ user@machine:~$ paste <(for i in RES_*; do echo "$i" | sed 's/RES_//g'; done) <(
 
 <br/>
 
-The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
+The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/hpla2_example/E_diff_bar_plot.py" target="_blank">E_diff_bar_plot.py</a> script:
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ python E_diff_bar_plot.py energy_differences_del.dat
 </pre>
 
 <div align="center">
-    <img src="residue_deletion/bar_plot.png">
+    <img src="hpla2_example/bar_plot.png">
 </div>
 
 <p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. Here, we can see that the deletion of most residues is unfavorable, however, there are many residues whose deletion decreases the energy barrier associated with the TS. </p>
 
 <br>
 
-<p align="justify">For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:</p>
+<p align="justify">For reactions involving charge separation, it might be useful to represent the residues relative to the separation plane that characterizes the macrodipole induced by the enzyme. This can be done with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/hpla2_example/E_diff_dist_plot.py" target="_blank">E_diff_dist_plot.py</a> script:</p>
 
 <pre style="color: white; background-color: black;">
 user@machine:~$ python E_diff_dist_plot.py TS.pdb energy_differences_del.dat 684 34856 1982 34854
 </pre>
 
 <div align="center">
-    <img src="residue_deletion/marker_plot.png">
+    <img src="hpla2_example/marker_plot.png">
 </div>
 
 
