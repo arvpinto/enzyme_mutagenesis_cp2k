@@ -151,7 +151,7 @@ for resid in $(<$res_list); do
         vmd res_"$resid".prmtop res_"$resid"_"$r_structure".pdb -e "$VMD_QMMM_SCRIPT" -dispdev none < "$qm_selection" > vmd.log 2>&1
 
  	### Get QM charge and replace in the CP2K inputs
-	qm_charge=$(awk '{print int($1)}' qm_charge.dat)
+	qm_charge=$(awk '{print sprintf("%.0f", $1)}' qm_charge.dat)
 	sed -i 's/CHARGE .*/CHARGE '"$qm_charge"'/g' sp_res_*.inp
 
 	### Replace TAG's in CP2K inputs
