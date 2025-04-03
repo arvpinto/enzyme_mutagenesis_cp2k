@@ -8,7 +8,7 @@ command -v cpptraj >/dev/null 2>&1 || { echo "Error: cpptraj is not installed or
 
 ### Check if the usage is correct
 if [ $# -ne 6 ]; then
-    echo "Usage: ./mut_qm_sel.sh <residue_number> <residue> <wt_topology> <mut_topology> <qm_selection> <leap_input>"
+    echo "Usage: mut_qm_sel.sh <residue_number> <residue> <wt_topology> <mut_topology> <qm_selection> <leap_input>"
     exit 1
 fi
 
