@@ -10,7 +10,7 @@ command -v vmd >/dev/null 2>&1 || { echo "Error: vmd is not installed or not in 
 
 ### Check if usage is correct
 if [ $# -ne 6 ]; then
-    echo "Usage: ./del_res_qmmm_cp2k.sh <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
+    echo "Usage: del_res_qmmm_cp2k.sh <residue_list> <topology> <reactant_structure> <ts_structure> <cp2k_template> <qm_selection>"
     exit 1
 fi
 
