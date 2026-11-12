@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+
+{% seo %}
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preload" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" as="style" type="text/css" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="red">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    {% include head-custom.html %}
+  </head>
+  <body>
+    <a id="skip-to-content" href="#content">Skip to the content.</a>
+
+    <header class="page-header" role="banner">
+      <center>
+      <br>
+      <br>
+      <div class="row">
+      <div class="header-left">
+      <h2 class="project-name">{{ page.title | default: site.title | default: site.github.repository_name }}</h2>
+      </div>
+      <div class="header-right">
+    {% assign image_map = "assets/img/TS_DEL_RESIDUES.png" %}
+    
+    {% if page.url contains 'residue_deletion' %}
+        {% assign image_map = "assets/img/res_del_img.png" %}
+    {% elsif page.url contains 'mutagenesis_scan' %}
+        {% assign image_map = "assets/img/mut_scan_img.png" %}
+    {% elsif page.url contains 'mutagenesis_multi' %}
+        {% assign image_map = "assets/img/mut_multi_img.png" %}
+    {% endif %}
+
+    <img class="logo" src="{{ image_map }}" alt="biochem logo" width="1000" height="521" />
+      </div>
+      <div class="header-left">
+      <h4>Alexandre V. Pinto, PhD in Chemistry</h4>
+      <h4><a href="https://laqv.requimte.pt/research/research-groups/407-high_performance_computing_in_molecular_modelling" target="_blank">High Performance Computing in Molecular Modelling Research Group - LAQV@REQUIMTE</a></h4>
+      <h4>Department of Chemistry and Biochemistry, Faculty of Sciences, University of Porto</h4>
+      </div>
+      </div>
+      <center>
+    </header>
+      <a href="https://github.com/arvpinto/enzyme_mutagenesis_cp2k" class="github-button" target="_blank">
+      <img src="https://raw.githubusercontent.com/arvpinto/arvpinto.github.io/refs/heads/main/assets/img/github-logo.png" alt="GitHub" />
+      </a>
+      <div class="buttongrp" style="text-align:center">
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/" class="btn"><b>Main <br> Page</b></a>
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" class="btn"><b>Residue <br> Deletion</b></a>
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan.html" class="btn"><b>Mutagenesis <br> Scan</b></a>
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi.html" class="btn"><b>Multipoint <br> Mutagenesis</b></a>
+      </div> 
+    <main id="content" class="main-content" role="main">
+      {{ content }}
+    </main>
+      <div class="buttongrp" style="text-align:center">
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/" class="btn"><b>Main <br> Page</b></a>
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/residue_deletion.html" class="btn"><b>Residue <br> Deletion</b></a>
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan.html" class="btn"><b>Mutagenesis <br> Scan</b></a>
+      <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_multi.html" class="btn"><b>Multipoint <br> Mutagenesis</b></a>
+      </div>
+    <footer class="site-footer" role="banner">
+      <center>
+      <br>
+      <br>
+      {% if site.github.is_project_page %}
+        <span class="site-footer-owner"><a href="{{ site.github.repository_url }}">{{ site.github.repository_name }}</a> is maintained at <a href="https://arvpinto.github.io/">{{ site.github.owner_name }}</a>.</span>
+      {% endif %}
+      <br>
+      <center>
+    </footer>
+  </body>
+</html>

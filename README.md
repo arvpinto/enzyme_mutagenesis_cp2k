@@ -1,0 +1,48 @@
+<p align="justify"><b>These protocols investigate the energetic contribution of enzyme residues to the activation energy using QM/MM approaches within CP2K. The objective is to identify residues that destabilize the transition state, enabling mutations that lower the activation energy and enhance the reaction rate.</b></p>
+
+<br>
+
+<p><b>The protocols include:</b>
+<br>
+● Residue Deletion: Residues are completely removed from the system
+<br>
+● Mutagenesis Scan: Residues are mutated to a specified type (e.g., glycine scanning), and their geometry is optimized
+<br>
+● Multipoint Mutant Mutagenesis: Multiple mutations are introduced, followed by molecular dynamics and geometry optimization procedures
+<br>
+<br>
+<b>To execute these protocols, the following files are required:</b>
+<br>
+● PDB structures for both the reactant and transition state geometries of the reaction
+<br>
+● The corresponding *prmtop topology file (refer to the Tutorial for Transition State (TS) Searches of Enzymatic Reaction Mechanisms using QM/MM Methods in CP2K)
+</p>
+
+<p align="justify"> Additional required files can be either obtained through specific instructions or found as sample files in the repository. The protocols’ scripts generate input files compatible with CP2K, streamlining the automation of these analyses. The scripts employed in the protocols require the availability of software such as VMD, PyMOL, AmberTools (CPPTRAJ, LEaP and ParmEd) and Python 3 with Matplotlib. The scripts produce input files that can be directly run in CP2K, thus providing pipelines to automatize these analyses. Every script lists its options with <code>-h</code>.
+<br>
+<br>
+The protocols can be downloaded from here <a href="https://github.com/arvpinto/enzyme_mutagenesis_cp2k/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>.
+<br>
+<br>
+After unzipping the file, run this command to make the scripts available in the current terminal (add it to your ~/.bashrc to make it permanent):
+<pre style="color: white; background-color: black;">
+user@machine:~$ source enzyme_mutagenesis_cp2k-main/mutagenesis_scripts.sh
+</pre>
+<p align="justify">The sample files used in the three protocols are in the hpla2_example directory. The sample CP2K template is a fast setup meant for testing (PBE functional with a double-zeta basis set), and should be replaced by the level of theory used to obtain the reactant and transition state geometries.</p>
+</p>
+
+---
+
+<br>
+<p>Some of these approaches have been employed in:</p>
+
+<p><a href="https://doi.org/10.1021/acscatal.1c02444" target="_blank">● Reaction Mechanism of MHETase, a PET Degrading Enzyme</a></p>
+<p><a href="https://doi.org/10.1039/D4SC02315C" target="_blank">● Revisiting the reaction pathways for phospholipid hydrolysis catalyzed by phospholipase A2 with QM/MM methods</a></p>
+<p><a href="https://pubs.acs.org/doi/10.1021/acs.jcim.2c01337" target="_blank">● Engineering DszC Mutants from Transition State Macrodipole Considerations and Evolutionary Sequence Analysis</a></p>
+<br>
+
+
+
+
+
+
