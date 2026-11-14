@@ -2,12 +2,10 @@
 # qmmm_common.sh - functions shared by del_res_qmmm_cp2k.sh, mut_scan_qmmm_cp2k.sh,
 # mut_mp_qmmm_cp2k.sh and build_mutant.sh. This file is sourced, not executed.
 
-shopt -s expand_aliases
-# shellcheck disable=SC1090
-[ -f ~/.bashrc ] && source ~/.bashrc >/dev/null 2>&1
+# The programs are taken from the environment the script is started from (PATH, conda,
+# modules); ~/.bashrc is not read, since it can activate another Python.
 
 SCRIPTS_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
-VMD_QMMM_SCRIPT="${VMD_QMMM_SCRIPT:-$SCRIPTS_DIR/vmd_forceeval.tcl}"
 
 die() { echo "Error: $*" >&2; exit 1; }
 
@@ -26,31 +24,53 @@ need_files() {
     done
 }
 
-# Python interpreter that can import ParmEd (override with the PYTHON variable)
+# Python interpreter that can import ParmEd and NumPy (override with the PYTHON variable).
+# Its full path is kept, so that nothing run later can switch to another Python.
 find_python() {
-    local candidate
+    local candidate path tried=()
     for candidate in "${PYTHON:-}" python3 python; do
         [[ -n "$candidate" ]] || continue
-        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "import parmed" >/dev/null 2>&1; then
-            PYTHON="$candidate"
+        path=$(command -v "$candidate" 2>/dev/null) || continue
+        tried+=("$path")
+        if "$path" -c "import parmed, numpy" >/dev/null 2>&1; then
+            export PYTHON="$path"
             return 0
         fi
     done
-    die "no Python interpreter with ParmEd was found (ParmEd comes with AmberTools)."
+    die "no Python that can import ParmEd and NumPy was found (tried: ${tried[*]:-none}). Activate the environment with AmberTools, or set PYTHON=/path/to/python."
 }
 
 qmtool() { "$PYTHON" "$SCRIPTS_DIR/qmmm_mut_tools.py" "$@"; }
 
 # make_qmmm_section <prmtop> <pdb> <qm_selection> [extra check-qmmm options]
-# Runs VMD to write forceeval_qmmm.inc, validates it against the topology and sets QM_CHARGE.
+# Writes forceeval_qmmm.inc, validates it against the topology and sets QM_CHARGE.
+# With QMMM_REF_INC (and QMMM_REF_TOP) set, the QM cell and the parameters of the links
+# that still exist are taken from that reference file (see qmmm_mut_tools.py qmmm-section);
+# QMMM_REF_DELETED is the residue removed from the reference topology, if any.
+QMMM_REF_INC="${QMMM_REF_INC:-}"
+QMMM_REF_TOP="${QMMM_REF_TOP:-}"
+QMMM_REF_DELETED=""
+
+# set_qmmm_reference <reference forceeval_qmmm.inc> <topology it was written for>
+set_qmmm_reference() {
+    [[ -f "$1" ]] || die "QM/MM reference file $1 not found."
+    QMMM_REF_INC="$(readlink -f "$1")"
+    QMMM_REF_TOP="$(readlink -f "$2")"
+}
+
 make_qmmm_section() {
-    local prmtop="$1" pdb="$2" selection="$3"
+    local prmtop="$1" pdb="$2" selection="$3" ref_opts=()
     shift 3
     rm -f forceeval_qmmm.inc qm_charge.dat
-    vmd "$prmtop" "$pdb" -e "$VMD_QMMM_SCRIPT" -dispdev none < "$selection" > vmd.log 2>&1
-    if [[ ! -s forceeval_qmmm.inc || ! -s qm_charge.dat ]]; then
-        echo "Error: VMD did not write the QM/MM section (see $(pwd)/vmd.log)" >&2
-        grep -h "ERROR" vmd.log >&2
+    if [[ -n "$QMMM_REF_INC" ]]; then
+        ref_opts=(--reference-inc "$QMMM_REF_INC" --reference-topology "$QMMM_REF_TOP")
+        [[ -n "$QMMM_REF_DELETED" ]] && ref_opts+=(--reference-deleted "$QMMM_REF_DELETED")
+    fi
+    if ! qmtool qmmm-section -p "$prmtop" -c "$pdb" -q "$selection" -o forceeval_qmmm.inc \
+            --charge-file qm_charge.dat "${ref_opts[@]}" > qmmm_section.log 2>&1 \
+            || [[ ! -s forceeval_qmmm.inc || ! -s qm_charge.dat ]]; then
+        echo "Error: the QM/MM section could not be written (see $(pwd)/qmmm_section.log)" >&2
+        grep -h "Error" qmmm_section.log >&2
         return 1
     fi
     QM_CHARGE=$(awk '{printf "%d\n", ($1 < 0 ? $1 - 0.5 : $1 + 0.5)}' qm_charge.dat)

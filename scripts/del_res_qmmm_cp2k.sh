@@ -11,10 +11,13 @@ Usage: del_res_qmmm_cp2k.sh [options] <residue_list> <topology> <reactant_struct
   <reactant_structure>   PDB of the reactant (same atom order as the topology)
   <ts_structure>         PDB of the transition state
   <cp2k_template>        CP2K QM/MM single-point template (RUN_TYPE ENERGY)
-  <qm_selection>         VMD selection of the QM layer (see qmmm_mut_tools.py make-selection)
+  <qm_selection>         selection of the QM layer (see qmmm_mut_tools.py make-selection)
 
 Options:
   --no-wt            do not create the WT/ directory with the reference (wild-type) inputs
+  --qmmm-reference F forceeval_qmmm.inc of the unmodified system: its QM cell and the
+                     parameters of the links that still exist are used for every system
+                     (default: QM cell and links computed for each system)
   --no-rebalance     after a side-chain deletion, leave the charges of the backbone stub
                      untouched (default: spread the residual so that the MM charge is integer)
   --overwrite        replace RES_* directories that already exist (default: skip them)
@@ -27,10 +30,12 @@ EOF
 }
 
 make_wt=1; rebalance=1; overwrite=0
+qmmm_reference=""
 args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --no-wt) make_wt=0 ;;
+        --qmmm-reference) qmmm_reference="$2"; shift ;;
         --no-rebalance) rebalance=0 ;;
         --overwrite) overwrite=1 ;;
         -h|--help) usage; exit 0 ;;
@@ -44,7 +49,7 @@ if [[ ${#args[@]} -ne 6 ]]; then usage >&2; exit 1; fi
 # shellcheck source=qmmm_common.sh
 source "$(dirname "$(readlink -f "$0")")/qmmm_common.sh"
 
-need_cmd cpptraj vmd
+need_cmd cpptraj
 find_python
 need_files "${args[@]}"
 
@@ -60,6 +65,7 @@ ts_structure="$(basename "${ts_pdb%.pdb}")"
 
 check_template "$cp2k_input"
 qmtool check-selection -p "$topology" -q "$qm_selection" || exit 1
+[[ -n "$qmmm_reference" ]] && set_qmmm_reference "$qmmm_reference" "$topology"
 
 top_dir="$(pwd)"
 summary="$top_dir/deletion_summary.dat"
@@ -118,6 +124,8 @@ for resid in $(<"$res_list"); do
     ### QM/MM section and CP2K inputs
     ref_opts=(--reference "$topology")
     [[ "$action" == "WHOLE" ]] && ref_opts+=(--reference-deleted "$resid")
+    QMMM_REF_DELETED=""
+    [[ "$action" == "WHOLE" ]] && QMMM_REF_DELETED="$resid"
     if [[ $ok -eq 1 ]] && make_qmmm_section res_"$resid".prmtop res_"$resid"_"$r_structure".pdb qm_selection.dat "${ref_opts[@]}"; then
         for state in "$r_structure" "$ts_structure"; do
             cp2k_input "$cp2k_input" sp_res_"$state".inp RES_DEL_"$state" res_"$resid".prmtop "$QM_CHARGE" res_"$resid"_"$state".pdb

@@ -20,14 +20,21 @@ Subcommands
   rebalance          integer MM charge for residues split by the QM/MM boundary
   fixed-atoms        write the CP2K FIXED_ATOMS list from the atoms that stay free
   check-qmmm         validate a forceeval_qmmm.inc against the topology
+  qmmm-section       write forceeval_qmmm.inc (QM cell, QM_KIND, LINK) for a QM selection
+  trim-residues      prepare a PDB for LEaP: rename mutated residues, keep their backbone
+  place-sidechains   choose side-chain torsions of rebuilt residues against their surroundings
 
 Run "qmmm_mut_tools.py <subcommand> -h" for the options of each subcommand.
 """
 
 import argparse
+import itertools
+import math
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
+
+import numpy as np
 
 try:
     import parmed as pmd
@@ -624,6 +631,17 @@ def cmd_fixed_atoms(args):
     by_res = Counter(f"{top.atoms[i].residue.name}{top.atoms[i].residue.idx + 1}" for i in free)
     print(f"{args.output}: {len(fixed)} fixed and {len(free)} free atoms "
           f"(free residues: {' '.join(by_res)})")
+    qm_all = {i - 1 for i in _read_qmmm_inc(args.qmmm)[0]} if args.qmmm else set()
+    split = []
+    for residue in top.residues:
+        ids = {a.idx for a in residue.atoms}
+        n_free = len(ids & free)
+        if 0 < n_free < len(ids) and "CA" not in {a.name for a in residue.atoms} and not ids & qm_all:
+            split.append(f"{residue.name}{residue.idx + 1}")
+    if split:
+        print(f"Note: {len(split)} non-protein residues are only partly free ({' '.join(split[:5])}"
+              f"{' ...' if len(split) > 5 else ''}); exclude backbone atom names only for the protein "
+              "in the free mask, e.g. &!(:1-124&@N,H,CA,HA,C,O)")
     if removed:
         by_res = Counter(f"{top.atoms[i].residue.name}{top.atoms[i].residue.idx + 1}"
                          for i in removed)
@@ -740,6 +758,446 @@ def cmd_check_qmmm(args):
 
 
 # --------------------------------------------------------------------------------------
+# coordinates
+# --------------------------------------------------------------------------------------
+
+def read_pdb(path):
+    """Returns (lines, list of indexes of the atom lines, coordinates as an N x 3 array)."""
+    try:
+        lines = open(path).readlines()
+    except OSError as exc:
+        die(f"could not read {path}: {exc}")
+    atom_lines = [i for i, line in enumerate(lines) if line.startswith(("ATOM", "HETATM"))]
+    xyz = np.array([(float(lines[i][30:38]), float(lines[i][38:46]), float(lines[i][46:54]))
+                    for i in atom_lines])
+    return lines, atom_lines, xyz
+
+
+def write_pdb_coordinates(lines, atom_lines, xyz, path):
+    out = list(lines)
+    for i, (x, y, z) in zip(atom_lines, xyz):
+        line = out[i]
+        out[i] = f"{line[:30]}{x:8.3f}{y:8.3f}{z:8.3f}{line[54:]}"
+    with open(path, "w") as handle:
+        handle.writelines(out)
+
+
+def coordinates_for(top, pdb):
+    _, _, xyz = read_pdb(pdb)
+    if len(xyz) != len(top.atoms):
+        die(f"{pdb} has {len(xyz)} atoms, the topology has {len(top.atoms)}")
+    return xyz
+
+
+# --------------------------------------------------------------------------------------
+# QM/MM section (replaces vmd_forceeval.tcl)
+# --------------------------------------------------------------------------------------
+
+def element_symbol(atom):
+    symbol = pmd.periodic_table.Element[atom.atomic_number] if atom.atomic_number > 0 else ""
+    if not symbol or symbol == "EP":
+        die(f"no element for atom {atom.residue.name}{atom.residue.idx + 1}@{atom.name} "
+            f"(atomic number {atom.atomic_number})")
+    return symbol
+
+
+def read_reference_inc(path):
+    """QM cell (the three ABC values as written) and link parameters of a reference
+    forceeval_qmmm.inc: {(QM serial, MM serial): (ALPHA_IMOMM, QMMM_SCALE_FACTOR)}."""
+    try:
+        text = open(path).read()
+    except OSError as exc:
+        die(f"could not read {path}: {exc}")
+    cell = None
+    for line in text.splitlines():
+        tokens = line.split("!")[0].split()
+        if tokens and tokens[0].upper() == "ABC":
+            values = [t for t in tokens[1:] if not t.startswith("[")]
+            if len(values) >= 3:
+                cell = values[:3]
+    if cell is None:
+        die(f"no ABC line in the &CELL section of {path}")
+    links = {}
+    for block in re.findall(r"&LINK\b(.*?)&END\s+LINK", text, re.S | re.I):
+        fields = {}
+        for line in block.splitlines():
+            tokens = line.split("!")[0].split()
+            if len(tokens) >= 2:
+                fields[tokens[0].upper()] = tokens[1]
+        try:
+            links[(int(fields["QM_INDEX"]), int(fields["MM_INDEX"]))] = (
+                fields.get("ALPHA_IMOMM"), fields.get("QMMM_SCALE_FACTOR"))
+        except KeyError:
+            die(f"LINK section without QM_INDEX or MM_INDEX in {path}")
+    return cell, links
+
+
+def map_to_reference(top, ref, deleted=None):
+    """Index of the reference atom of every atom of top (None when there is none), matched by
+    residue number and atom name. deleted: residue removed from the reference topology."""
+    mapping = []
+    for residue in top.residues:
+        ridx = residue.idx + (1 if deleted and residue.idx >= deleted - 1 else 0)
+        names = {}
+        if ridx < len(ref.residues) and ref.residues[ridx].name == residue.name:
+            names = {a.name: a.idx for a in ref.residues[ridx].atoms}
+        mapping.extend(names.get(atom.name) for atom in residue.atoms)
+    return mapping
+
+
+def link_heuristic(atom, partner):
+    """ALPHA_IMOMM and QMMM_SCALE_FACTOR from the charge of the MM link atom relative to the
+    charges of the residue of the QM atom (rule of the original vmd_forceeval.tcl)."""
+    charges = np.array([a.charge for a in atom.residue.atoms])
+    mean = charges.mean()
+    stdev = charges.std(ddof=1) if len(charges) > 1 else 0.0
+    if stdev > 0:
+        scale = 0.83 * math.exp(-0.5 * ((partner.charge - mean) / stdev) ** 2)
+    else:
+        scale = 0.83
+    alpha = 1.38 + 0.3 * (0.83 - scale) ** 2
+    return f"{alpha:.2f}", f"{scale:.1f}"
+
+
+def cmd_qmmm_section(args):
+    top = load_top(args.topology)
+    xyz = coordinates_for(top, args.coordinates)
+    qm, _ = selected_atoms(top, read_selection(args.selection))
+    if not qm:
+        die("the QM selection does not match any atom")
+    qm_sorted = sorted(qm)
+    qm_xyz = xyz[qm_sorted]
+    extent = qm_xyz.max(axis=0) - qm_xyz.min(axis=0)
+
+    ref_cell, ref_links, mapping = None, {}, None
+    if args.reference_inc:
+        ref_cell, ref_links = read_reference_inc(args.reference_inc)
+        ref_top = load_top(args.reference_topology) if args.reference_topology else top
+        mapping = map_to_reference(top, ref_top, args.reference_deleted)
+        cell = np.array([float(v) for v in ref_cell])
+        margin = (cell - extent) / 2
+        if (margin < args.min_margin).any():
+            die(f"the QM atoms ({' x '.join(f'{v:.2f}' for v in extent)} A) do not fit in the QM cell of "
+                f"{args.reference_inc} ({' x '.join(ref_cell)}) with {args.min_margin} A on each side; "
+                "generate the cell from the coordinates (without --reference-inc) or use a larger cell")
+
+    blocks = ["! CP2K > FORCE_EVAL > QMMM > CELL"]
+    if ref_cell:
+        abc = "  ".join(ref_cell)
+    else:
+        size = extent + 2 * args.margin
+        abc = f"{size[0]:.6f}  {size[1]:.6f}  {size[2]:.6f}"
+    blocks.append(f"&CELL\n  ABC [angstrom] {abc}     !size of cell\n"
+                  f"  ALPHA_BETA_GAMMA 90.0 90.0 90.0      !shape of cell\n&END CELL\n")
+
+    # QM atoms, one QM_KIND per element, elements in order of atomic number
+    blocks.append("! CP2K > FORCE_EVAL > QMMM > QM_KIND")
+    by_kind, number = defaultdict(list), {}
+    for idx in qm_sorted:
+        symbol = element_symbol(top.atoms[idx])
+        by_kind[symbol].append(idx + 1)
+        number[symbol] = top.atoms[idx].atomic_number
+    for kind in sorted(by_kind, key=lambda k: (number[k], k)):
+        blocks.append(f"&QM_KIND {kind}\n  MM_INDEX {' '.join(str(i) for i in by_kind[kind])}\n&END QM_KIND")
+
+    # link atoms for every bond between a QM heavy atom and an MM atom
+    blocks.append("! CP2K > FORCE_EVAL > QMMM > LINK")
+    reused, computed = 0, []
+    for idx in qm_sorted:
+        atom = top.atoms[idx]
+        if atom.atomic_number == 1:
+            continue
+        for partner in sorted(atom.bond_partners, key=lambda a: a.idx):
+            if partner.idx in qm:
+                continue
+            params = None
+            if mapping is not None:
+                rq, rm = mapping[idx], mapping[partner.idx]
+                if rq is not None and rm is not None:
+                    params = ref_links.get((rq + 1, rm + 1))
+            if params and params[0] and params[1]:
+                reused += 1
+            else:
+                params = link_heuristic(atom, partner)
+                computed.append(f"{atom.residue.name}{atom.residue.idx + 1}@{atom.name}-"
+                                f"{partner.residue.name}{partner.residue.idx + 1}@{partner.name}")
+            first, second = sorted((atom, partner), key=lambda a: a.idx)
+            blocks.append(f"&LINK\n  ALPHA_IMOMM {params[0]}     !{first.type}-{second.type} bond "
+                          f"(default is ALPHA_IMOMM 1.38 for C-C bond)\n  LINK_TYPE IMOMM\n"
+                          f"  MM_INDEX  {partner.idx + 1}\n  QM_INDEX  {idx + 1}\n"
+                          f"  QMMM_SCALE_FACTOR {params[1]}\n&END LINK")
+
+    with open(args.output, "w") as handle:
+        handle.write("\n".join(blocks) + "\n")
+    raw = sum(top.atoms[i].charge for i in qm)
+    if args.charge_file:
+        with open(args.charge_file, "w") as handle:
+            handle.write(f"{raw:.6f}\n")
+    n_links = reused + len(computed)
+    print(f"{args.output}: {len(qm)} QM atoms, {n_links} links, sum of MM charges {raw:+.4f}")
+    if args.reference_inc:
+        print(f"QM cell and {reused} link(s) taken from {args.reference_inc}"
+              + (f"; computed for {len(computed)} new link(s): {' '.join(computed)}" if computed else ""))
+
+
+# --------------------------------------------------------------------------------------
+# mutant construction (replaces PyMOL)
+# --------------------------------------------------------------------------------------
+
+AMINO_ACIDS = {"ALA", "ARG", "ASN", "ASP", "ASH", "CYS", "CYX", "CYM", "GLN", "GLU", "GLH", "GLY",
+               "HIS", "HIE", "HID", "HIP", "ILE", "LEU", "LYS", "LYN", "MET", "PHE", "PRO", "SER",
+               "THR", "TRP", "TYR", "VAL"}
+
+STAGGERED = (-60.0, 60.0, 180.0)
+PLANAR_SYM = (-90.0, -60.0, -30.0, 0.0, 30.0, 60.0)        # groups with a 2-fold symmetry
+FULL_30 = tuple(float(v) for v in range(-180, 180, 30))
+FULL_60 = tuple(float(v) for v in range(-180, 180, 60))
+
+# side-chain torsions (heavy atoms) and torsions of polar hydrogens, Amber atom names
+_CHI = {
+    "ARG": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD", STAGGERED),
+            ("CB", "CG", "CD", "NE", STAGGERED), ("CG", "CD", "NE", "CZ", FULL_60)],
+    "ASN": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "OD1", FULL_30)],
+    "ASP": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "OD1", PLANAR_SYM)],
+    "ASH": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "OD1", FULL_30),
+            ("CB", "CG", "OD2", "HD2", (0.0, 180.0))],
+    "CYS": [("N", "CA", "CB", "SG", STAGGERED), ("CA", "CB", "SG", "HG", STAGGERED)],
+    "CYM": [("N", "CA", "CB", "SG", STAGGERED)],
+    "CYX": [("N", "CA", "CB", "SG", STAGGERED)],
+    "GLN": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD", STAGGERED),
+            ("CB", "CG", "CD", "OE1", FULL_30)],
+    "GLU": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD", STAGGERED),
+            ("CB", "CG", "CD", "OE1", PLANAR_SYM)],
+    "GLH": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD", STAGGERED),
+            ("CB", "CG", "CD", "OE1", FULL_30), ("CG", "CD", "OE2", "HE2", (0.0, 180.0))],
+    "HIS": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "ND1", FULL_30)],
+    "ILE": [("N", "CA", "CB", "CG1", STAGGERED), ("CA", "CB", "CG1", "CD1", STAGGERED)],
+    "LEU": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD1", STAGGERED)],
+    "LYS": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD", STAGGERED),
+            ("CB", "CG", "CD", "CE", STAGGERED), ("CG", "CD", "CE", "NZ", STAGGERED)],
+    "MET": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "SD", STAGGERED),
+            ("CB", "CG", "SD", "CE", STAGGERED)],
+    "PHE": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD1", PLANAR_SYM)],
+    "SER": [("N", "CA", "CB", "OG", STAGGERED), ("CA", "CB", "OG", "HG", STAGGERED)],
+    "THR": [("N", "CA", "CB", "OG1", STAGGERED), ("CA", "CB", "OG1", "HG1", STAGGERED)],
+    "TRP": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD1", FULL_30)],
+    "TYR": [("N", "CA", "CB", "CG", STAGGERED), ("CA", "CB", "CG", "CD1", PLANAR_SYM),
+            ("CE1", "CZ", "OH", "HH", (0.0, 180.0))],
+    "VAL": [("N", "CA", "CB", "CG1", STAGGERED)],
+}
+_CHI["LYN"] = _CHI["LYS"]
+_CHI["HIE"] = _CHI["HID"] = _CHI["HIP"] = _CHI["HIS"]
+
+
+def cmd_trim_residues(args):
+    """Rename the mutated residues of a protein PDB and keep only the atoms that the new
+    residue shares with the old one (backbone, and CB unless one of them is GLY), so that
+    LEaP rebuilds the side chain and all hydrogens of the residue from its template."""
+    mutations = _parse_mutations(args.mutations)
+    renames = {}
+    for item in args.rename or []:
+        number, _, name = item.partition(":")
+        renames[int(number)] = name.upper()
+    for name in list(mutations.values()) + list(renames.values()):
+        if name not in AMINO_ACIDS:
+            die(f"{name} is not a supported residue")
+    lines = open(args.input).readlines()
+    out, residue_index, previous = [], 0, None
+    seen = set()
+    for line in lines:
+        if line.startswith(("ATOM", "HETATM")):
+            key = (line[17:21], line[21], line[22:27])
+            if key != previous:
+                residue_index += 1
+                previous = key
+            old_name = line[17:21].strip()
+            atom_name = line[12:16].strip()
+            if residue_index in mutations:
+                new = mutations[residue_index]
+                seen.add(residue_index)
+                keep = {"N", "CA", "C", "O", "OXT"}
+                if new != "PRO":
+                    keep |= {"H", "H1", "H2", "H3"}
+                if new != "GLY" and old_name != "GLY":
+                    keep.add("CB")
+                if atom_name not in keep:
+                    continue
+                line = f"{line[:17]}{new:<3s}{line[20:]}"
+            elif residue_index in renames:
+                seen.add(residue_index)
+                line = f"{line[:17]}{renames[residue_index]:<3s}{line[20:]}"
+        out.append(line)
+    missing = sorted((set(mutations) | set(renames)) - seen)
+    if missing:
+        die(f"residue(s) {missing} not found in {args.input} ({residue_index} residues)")
+    with open(args.output, "w") as handle:
+        handle.writelines(out)
+    print(f"{args.output}: residues {' '.join(f'{r}{n}' for r, n in sorted(mutations.items()))} trimmed for LEaP")
+
+
+def _dihedral(p0, p1, p2, p3):
+    b0, b1, b2 = p0 - p1, p2 - p1, p3 - p2
+    b1n = b1 / np.linalg.norm(b1)
+    v = b0 - np.dot(b0, b1n) * b1n
+    w = b2 - np.dot(b2, b1n) * b1n
+    x = np.dot(v, w)
+    y = np.dot(np.cross(b1n, v), w)
+    return math.degrees(math.atan2(y, x))
+
+
+def _rotate(xyz, moving, origin, axis, angle_deg):
+    axis = axis / np.linalg.norm(axis)
+    theta = math.radians(angle_deg)
+    pts = xyz[moving] - origin
+    cos, sin = math.cos(theta), math.sin(theta)
+    rotated = (pts * cos + np.cross(axis, pts) * sin
+               + np.outer(pts @ axis, axis) * (1 - cos))
+    xyz[moving] = rotated + origin
+
+
+class SideChain:
+    """Torsions of one residue and everything needed to score its conformations."""
+
+    def __init__(self, top, residue, xyz, box, scale, only_hydrogens=False):
+        self.residue = residue
+        names = {a.name: a.idx for a in residue.atoms}
+        res_atoms = set(names.values())
+        self.torsions = []
+        for a, b, c, d, values in _CHI.get(residue.name, []):
+            if not all(n in names for n in (a, b, c, d)):
+                continue
+            if only_hydrogens and top.atoms[names[d]].atomic_number != 1:
+                continue
+            # atoms on the c side of the b-c bond (inside the residue)
+            moving, queue = set(), deque([names[c]])
+            visited = {names[b], names[c]}
+            while queue:
+                current = queue.popleft()
+                for partner in top.atoms[current].bond_partners:
+                    if partner.idx in res_atoms and partner.idx not in visited:
+                        visited.add(partner.idx)
+                        moving.add(partner.idx)
+                        queue.append(partner.idx)
+            self.torsions.append(((names[a], names[b], names[c], names[d]),
+                                  np.array(sorted(moving)), values))
+        self.moving = sorted({i for t in self.torsions for i in t[1]})
+        if not self.moving:
+            return
+        mov = np.array(self.moving)
+        # atoms within 3 bonds are not scored
+        close = {}
+        for i in self.moving:
+            seen, frontier = {i}, {i}
+            for _ in range(3):
+                frontier = {p.idx for f in frontier for p in top.atoms[f].bond_partners} - seen
+                seen |= frontier
+            close[i] = seen
+        center = xyz[names.get("CA", self.moving[0])]
+        d = xyz - center
+        if box is not None:
+            d -= box * np.round(d / box)
+        near = np.where(np.linalg.norm(d, axis=1) < 16.0)[0]
+        mov_set = set(self.moving)
+        self.env = np.array([i for i in near if i not in mov_set])
+        radius = np.array([max(a.rmin, 0.6) for a in top.atoms])
+        self.d0_env = scale * (radius[mov][:, None] + radius[self.env][None, :])
+        self.mask_env = np.array([[j not in close[i] for j in self.env] for i in self.moving])
+        self.d0_int = scale * (radius[mov][:, None] + radius[mov][None, :])
+        self.mask_int = np.triu(np.array([[j not in close[i] for j in self.moving]
+                                          for i in self.moving]), 1)
+        self.box = box
+
+    def apply(self, xyz, values):
+        for (quad, moving, _), target in zip(self.torsions, values):
+            a, b, c, d = quad
+            current = _dihedral(xyz[a], xyz[b], xyz[c], xyz[d])
+            _rotate(xyz, moving, xyz[c], xyz[c] - xyz[b], target - current)
+
+    def score(self, xyz):
+        mov = xyz[self.moving]
+        diff = mov[:, None, :] - xyz[self.env][None, :, :]
+        if self.box is not None:
+            diff -= self.box * np.round(diff / self.box)
+        dist = np.linalg.norm(diff, axis=2)
+        over = np.clip(self.d0_env - dist, 0, None) * self.mask_env
+        dint = np.linalg.norm(mov[:, None, :] - mov[None, :, :], axis=2)
+        over_int = np.clip(self.d0_int - dint, 0, None) * self.mask_int
+        return float((over ** 2).sum() + (over_int ** 2).sum())
+
+    def closest(self, xyz, top):
+        mov = xyz[self.moving]
+        diff = mov[:, None, :] - xyz[self.env][None, :, :]
+        if self.box is not None:
+            diff -= self.box * np.round(diff / self.box)
+        dist = np.where(self.mask_env, np.linalg.norm(diff, axis=2), np.inf)
+        i, j = np.unravel_index(np.argmin(dist), dist.shape)
+        a, b = top.atoms[self.moving[i]], top.atoms[self.env[j]]
+        return (f"{a.name}-{b.residue.name}{b.residue.idx + 1}@{b.name} "
+                f"{dist[i, j]:.2f} A")
+
+
+def _optimize_sidechain(sc, xyz, refine_top):
+    base = xyz.copy()
+    candidates = []
+    for combo in itertools.product(*[t[2] for t in sc.torsions]):
+        trial = base.copy()
+        sc.apply(trial, combo)
+        candidates.append((sc.score(trial), combo))
+    candidates.sort(key=lambda c: c[0])
+    best_score, best_values = candidates[0][0], list(candidates[0][1])
+    for start_score, start in candidates[:refine_top]:
+        values, current = list(start), start_score
+        for step in (20.0, 10.0, 5.0):
+            improved = True
+            while improved:
+                improved = False
+                for k in range(len(values)):
+                    for delta in (-step, step):
+                        trial_values = list(values)
+                        trial_values[k] += delta
+                        trial = base.copy()
+                        sc.apply(trial, trial_values)
+                        value = sc.score(trial)
+                        if value < current - 1e-6:
+                            values, current, improved = trial_values, value, True
+        if current < best_score:
+            best_score, best_values = current, values
+    sc.apply(xyz, best_values)
+    return best_score, best_values, len(candidates)
+
+
+def cmd_place_sidechains(args):
+    top = load_top(args.topology)
+    lines, atom_lines, xyz = read_pdb(args.coordinates)
+    if len(xyz) != len(top.atoms):
+        die(f"{args.coordinates} has {len(xyz)} atoms, the topology has {len(top.atoms)}")
+    box = None
+    if top.box is not None and np.allclose(top.box[3:], 90.0) and not args.no_pbc:
+        box = np.array(top.box[:3], dtype=float)
+    full = [int(r) for r in args.residues]
+    hydrogens = [int(r) for r in (args.hydrogens_only or [])]
+    chains = []
+    for resid in full + hydrogens:
+        if resid < 1 or resid > len(top.residues):
+            die(f"residue {resid} does not exist")
+        chains.append(SideChain(top, top.residues[resid - 1], xyz, box, args.scale,
+                                only_hydrogens=resid in hydrogens))
+    for cycle in range(args.cycles if len(chains) > 1 else 1):
+        for sc in chains:
+            if not sc.torsions:
+                continue
+            score, values, n = _optimize_sidechain(sc, xyz, args.refine)
+            if cycle == (args.cycles if len(chains) > 1 else 1) - 1:
+                torsions = " ".join(f"{v:.0f}" for v in values)
+                print(f"{sc.residue.name}{sc.residue.idx + 1}: {n} conformations, torsions {torsions}, "
+                      f"overlap score {score:.3f}, closest contact {sc.closest(xyz, top)}")
+    for sc in chains:
+        if not sc.torsions:
+            print(f"{sc.residue.name}{sc.residue.idx + 1}: no side-chain torsion to sample")
+    write_pdb_coordinates(lines, atom_lines, xyz, args.output)
+
+
+# --------------------------------------------------------------------------------------
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -832,6 +1290,47 @@ def build_parser():
     p.add_argument("--allow-free-qm", action="store_true", help="never fix QM atoms automatically")
     p.add_argument("-o", "--output", default="fixed_atoms.inc")
     p.set_defaults(func=cmd_fixed_atoms)
+
+    p = sub.add_parser("qmmm-section", help="write forceeval_qmmm.inc for a QM selection")
+    p.add_argument("-p", "--topology", required=True)
+    p.add_argument("-c", "--coordinates", required=True, help="PDB with the coordinates (QM cell size)")
+    p.add_argument("-q", "--selection", required=True)
+    p.add_argument("-o", "--output", default="forceeval_qmmm.inc")
+    p.add_argument("--charge-file", default="qm_charge.dat",
+                   help="file for the sum of the MM charges of the QM atoms (default: qm_charge.dat)")
+    p.add_argument("--margin", type=float, default=5.0,
+                   help="space added on each side of the QM atoms in the QM cell (default: 5.0 A)")
+    p.add_argument("--reference-inc",
+                   help="forceeval_qmmm.inc of the unmodified system: its QM cell and the parameters of "
+                        "the links that still exist are reused, so that all systems share them")
+    p.add_argument("--reference-topology",
+                   help="topology the reference file was written for (default: the same topology)")
+    p.add_argument("--reference-deleted", type=int,
+                   help="residue removed from the reference topology (whole-residue deletions)")
+    p.add_argument("--min-margin", type=float, default=2.0,
+                   help="smallest space between the QM atoms and the reference QM cell (default: 2.0 A)")
+    p.set_defaults(func=cmd_qmmm_section)
+
+    p = sub.add_parser("trim-residues", help="rename mutated residues and keep their backbone for LEaP")
+    p.add_argument("-i", "--input", required=True, help="protein PDB (residues counted in file order)")
+    p.add_argument("-o", "--output", required=True)
+    p.add_argument("--rename", action="append", help="residue renamed without trimming, e.g. 97:CYS (repeatable)")
+    p.add_argument("mutations", nargs="+", help="mutations, e.g. 41LYS 53ASP")
+    p.set_defaults(func=cmd_trim_residues)
+
+    p = sub.add_parser("place-sidechains", help="choose side-chain torsions against the surroundings")
+    p.add_argument("-p", "--topology", required=True)
+    p.add_argument("-c", "--coordinates", required=True, help="PDB of the whole system")
+    p.add_argument("-o", "--output", required=True, help="PDB with the new side-chain coordinates")
+    p.add_argument("-r", "--residues", nargs="+", required=True, help="residues whose side chain is placed")
+    p.add_argument("--hydrogens-only", nargs="+", help="residues where only polar hydrogens are rotated")
+    p.add_argument("--scale", type=float, default=0.7,
+                   help="overlap distance as a fraction of the sum of the LJ radii (default: 0.7)")
+    p.add_argument("--refine", type=int, default=5, help="best conformations refined by small steps (default: 5)")
+    p.add_argument("--cycles", type=int, default=2,
+                   help="passes over the residues when more than one is placed (default: 2)")
+    p.add_argument("--no-pbc", action="store_true", help="ignore the periodic box of the topology")
+    p.set_defaults(func=cmd_place_sidechains)
 
     p = sub.add_parser("check-qmmm", help="validate forceeval_qmmm.inc against the topology")
     p.add_argument("-p", "--topology", required=True)

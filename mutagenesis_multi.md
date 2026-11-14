@@ -23,17 +23,13 @@
 <br>
 ● CP2K
 <br>
-● PyMOL
-<br>
-● VMD
-<br>
 ● CPPTRAJ (from AmberTools)
 <br>
 ● LEaP (from AmberTools)
 <br>
 ● ParmEd (from AmberTools)
 <br>
-● Python 3 with Matplotlib (for the plots)
+● Python 3 with NumPy and Matplotlib
 </p>
 
 
@@ -53,10 +49,10 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mut_mp_q
 <pre style="color: white; background-color: black;">
 <span style="color: #FF3366; font-weight: bold;">mut_mp_qmmm_cp2k.sh [options] &lt;mutant_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt; &lt;selection_free&gt;</span>
     
-<span style="color: #9966CC;">user@machine:~$</span> mut_mp_qmmm_cp2k.sh variant_list.dat hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat free_selection.dat
+<span style="color: #9966CC;">user@machine:~$</span> mut_mp_qmmm_cp2k.sh --qmmm-reference forceeval_qmmm.inc variant_list.dat hpla2_ee.prmtop R.pdb TS.pdb :1-124 leap_template.in cp2k_template.inp qm_selection.dat free_selection.dat
 </pre>
 
-<p align="justify">It prepares a directory for each mutant variant in the list where the input files for CP2K will be output, and a WT directory with the single-points of the unmodified system. A given mutant variant can be specified as &lt;name&gt; &lt;number&gt;&lt;residue&gt; in the file mutant variant list (e.g. MUT_001 41LYS 53ASP 74GLU 92ASP). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme, which has to be the first block of atoms of the topology (its parameters are updated, while the rest of the system remains unchanged). The LEaP input has to load the same force field that was used for the original topology, as explained in the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan.html" target="_blank">mutagenesis scan protocol</a>. The cp2k_template.inp file is used to produce molecular dynamics, geometry optimization and single-point energy input files. The &lt;selection_free&gt; argument requires a file containing cpptraj selections for each mutant variant, specifying the atoms that remain unfrozen (e.g. MUT_001 (:41,53,74,92&amp;!@N,H,CA,HA,C,O)&lt;:3). The selection is evaluated on the transition state structure and the same atoms are free in both states. The mp_summary.dat file reports what was done to each variant.</p>
+<p align="justify">It prepares a directory for each mutant variant in the list where the input files for CP2K will be output, and a WT directory with the single-points of the unmodified system. A given mutant variant can be specified as &lt;name&gt; &lt;number&gt;&lt;residue&gt; in the file mutant variant list (e.g. MUT_001 41LYS 53ASP 74GLU 92ASP). Note: when mutating a CYX residue in a disulfide bridge, the other CYX is converted to CYS. The &lt;selection&gt; argument defines the residue range of the enzyme, which has to be the first block of atoms of the topology (its parameters are updated, while the rest of the system remains unchanged). The LEaP input has to load the same force field that was used for the original topology, as explained in the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan.html" target="_blank">mutagenesis scan protocol</a>. The cp2k_template.inp file is used to produce molecular dynamics, geometry optimization and single-point energy input files. The &lt;selection_free&gt; argument requires a file containing cpptraj selections for each mutant variant, specifying the atoms that remain unfrozen (e.g. MUT_001 :41,53,74,92|((((:41,53,74,92)&amp;!@N,H,CA,HA,C,O)&lt;:2.5)&amp;!(:1-124&amp;@N,H,CA,HA,C,O)), i.e. the mutated residues and every residue within 2.5 Å of their sidechains, without the protein backbone). Backbone atom names should only be excluded within the protein residue range, since water oxygens are also named O; the script reports solvent molecules that end up only partly free. The selection is evaluated on the transition state structure and the same atoms are free in both states. The mp_summary.dat file reports what was done to each variant.</p>
 
 <p align="justify">The first optimization and the molecular dynamics are classical, and the force field cannot describe the bonds that are being formed and broken in the transition state. For this reason, the atoms of the QM layer that are selected by &lt;selection_free&gt; and do not belong to a mutated residue are kept fixed (they are listed in mp_summary.dat). The <code>--allow-free-qm</code> option turns this off, and should only be used if none of those atoms takes part in the reaction. The length, time step and temperature of the molecular dynamics can be changed with the <code>--md-steps</code>, <code>--timestep</code> and <code>--temperature</code> options.</p>
 
@@ -68,6 +64,9 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mut_mp_q
 <span style="color: #FF3366; font-weight: bold;">build_mutant.sh [options] &lt;mut_name&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;selection&gt; &lt;leap_template&gt; &lt;mutation&gt; [&lt;mutation&gt; ...]</span>
 </pre>
 
+<p align="justify">The mutated residues keep their backbone atoms (and CB, unless GLY is involved), and LEaP rebuilds the rest of each residue from its template. The <code>place-sidechains</code> subcommand of <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/qmmm_mut_tools.py" target="_blank">qmmm_mut_tools.py</a> then samples the sidechain torsions of the new residues (staggered values for sp<sup>3</sup> torsions, 30° steps for planar groups, followed by a local refinement) and keeps the conformation with the fewest steric overlaps with the rest of the system, including the solvent and the substrate. This is done separately for the reactant and the transition state, and the result of each residue is written to placement.log in the mutant directory. The <code>--no-placement</code> option keeps the geometry built by LEaP.</p>
+
+
 <br/>
 
 <p align="justify">Since mutating residues changes the atom numbering, the QM/MM settings must be updated for each mutation. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/qmmm_mut_tools.py" target="_blank">qmmm_mut_tools.py</a> script checks how the mutated residues should be included in the QM layer and modifies the qm_selection.dat file accordingly. It has the following usage:</p>
@@ -76,7 +75,9 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/mut_mp_q
 <span style="color: #FF3366; font-weight: bold;">qmmm_mut_tools.py mutate-selection -w &lt;topology&gt; -m &lt;mutant_topology&gt; -q &lt;qm_selection&gt; -o &lt;new_qm_selection&gt; &lt;mutation&gt; [&lt;mutation&gt; ...]</span>
 </pre>
 
-<p align="justify">The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The resulting QM layer is then checked against the topology (link atoms, charge, number of electrons), and no inputs are written for a variant that fails these checks.</p>
+<p align="justify">The <code>qmmm-section</code> subcommand of <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/qmmm_mut_tools.py" target="_blank">qmmm_mut_tools.py</a> then writes a file with the configuration of the QM layer (QM cell, QM atoms and link atoms), defined by the selection in the qm_selection.dat file. The resulting QM layer is then checked against the topology (link atoms, charge, number of electrons), and no inputs are written for a variant that fails these checks.</p>
+
+<p align="justify">By default, the QM cell is built around the QM atoms of each system (5 Å on each side) and the link atom parameters (<code>ALPHA_IMOMM</code> and <code>QMMM_SCALE_FACTOR</code>) are estimated from the charges of the MM atoms. If the QM/MM section used to obtain the original reaction path is available, it should be given with <code>--qmmm-reference forceeval_qmmm.inc</code> (the file used for this example is in the hpla2_example folder). The QM cell is then copied from that file, and every link atom that also exists in the original system keeps its original parameters, so that the WT single points reproduce the original setup and all variants share the same QM cell. Only links that did not exist before (for instance, around a mutated residue of the QM layer) get estimated parameters, and they are listed in the qmmm_section.log file. A system whose QM atoms do not fit in the reference cell (less than 2 Å from its edges, see <code>--min-margin</code>) is skipped.</p>
 
 <br/>
 
@@ -104,6 +105,8 @@ After running the optimization and single-point calculations, the <a href="https
 <span style="color: #9966CC;">user@machine:~$</span> extract_barriers.py --wt-dir WT -o energy_differences_multi.dat MUT_*
 </pre>
 
+<p align="justify">Entries whose optimization stopped at the maximum number of steps without converging are reported by the script, and left out with the <code>--strict-opt</code> option.</p>
+
 <br/>
 
 The energy barriers can be plotted with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/E_diff_multi_bar_plot.py" target="_blank">E_diff_multi_bar_plot.py</a> script:
@@ -112,8 +115,12 @@ The energy barriers can be plotted with the <a href="https://arvpinto.github.io/
 <span style="color: #9966CC;">user@machine:~$</span> E_diff_multi_bar_plot.py energy_differences_multi.dat
 </pre>
 
+<div align="center">
+    <img src="hpla2_example/multi_bar_plot.png">
+</div>
+
 <br/>
 
-<p align="justify"> The calculated energy barriers of the mutant variants can be compared with the original energy barrier to see if the introduced mutations stabilize or destabilize the transition state of the reaction step. Since the reactant and the transition state of each variant are relaxed independently, the mutated residues and their surroundings may end up in different conformations in the two states, which adds a contribution to the energy barrier that is not related to the reaction. It is advisable to compare the optimized reactant and transition state structures of each variant, and to repeat the procedure from different molecular dynamics lengths or velocities before drawing conclusions from small differences. </p>
+<p align="justify"> The calculated energy barriers of the mutant variants can be compared with the original energy barrier to see if the introduced mutations stabilize or destabilize the transition state of the reaction step. Since the reactant and the transition state of each variant are relaxed independently, the mutated residues and their surroundings may end up in different conformations in the two states, which adds a contribution to the energy barrier that is not related to the reaction. In this example the effects are close to additive: MUT_001 lowers the barrier by 5.8 kcal⋅mol<sup>-1</sup>, and the GLY scan values of the same four residues add up to 6.0 kcal⋅mol<sup>-1</sup>; for MUT_003 the two values are 7.6 and 7.7 kcal⋅mol<sup>-1</sup>. It is advisable to compare the optimized reactant and transition state structures of each variant, and to repeat the procedure from different molecular dynamics lengths or velocities before drawing conclusions from small differences. </p>
 
 <br/>

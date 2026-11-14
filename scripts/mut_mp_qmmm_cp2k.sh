@@ -15,7 +15,7 @@ Usage: mut_mp_qmmm_cp2k.sh [options] <mutant_list> <topology> <reactant_structur
   <selection>            AMBER mask of the part rebuilt with LEaP (e.g. :1-124)
   <leap_template>        LEaP input that rebuilds that part with the original force field
   <cp2k_template>        CP2K QM/MM single-point template (RUN_TYPE ENERGY)
-  <qm_selection>         VMD selection of the QM layer
+  <qm_selection>         selection of the QM layer (see qmmm_mut_tools.py make-selection)
   <selection_free>       one line per mutant: name followed by the AMBER mask of the atoms
                          that are free during the optimizations and the MD
 
@@ -29,6 +29,9 @@ Options:
                        them (default: they are kept fixed, because the classical stages
                        cannot describe the reacting atoms)
   --no-wt              do not create the WT/ directory with the reference inputs
+  --qmmm-reference F   forceeval_qmmm.inc of the unmodified system: its QM cell and the
+                       parameters of the links that still exist are used for every system
+                       (default: QM cell and links computed for each system)
   --force-ff           accept a LEaP template that changes atom types of unmodified residues
   --overwrite          replace mutant directories that already exist (default: skip them)
   -h, --help           show this message
@@ -42,6 +45,7 @@ EOF
 make_wt=1; overwrite=0; allow_free_qm=0
 md_steps=5000; timestep=1.0; temperature=303.15; opt_md_iter=1000; max_iter=5000
 build_opts=()
+qmmm_reference=""
 args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -52,6 +56,7 @@ while [[ $# -gt 0 ]]; do
         --max-iter) max_iter="$2"; shift ;;
         --allow-free-qm) allow_free_qm=1 ;;
         --no-wt) make_wt=0 ;;
+        --qmmm-reference) qmmm_reference="$2"; shift ;;
         --force-ff) build_opts+=(--force-ff) ;;
         --overwrite) overwrite=1 ;;
         -h|--help) usage; exit 0 ;;
@@ -65,7 +70,7 @@ if [[ ${#args[@]} -ne 9 ]]; then usage >&2; exit 1; fi
 # shellcheck source=qmmm_common.sh
 source "$(dirname "$(readlink -f "$0")")/qmmm_common.sh"
 
-need_cmd pymol tleap cpptraj vmd
+need_cmd tleap cpptraj
 find_python
 need_files "${args[0]}" "${args[1]}" "${args[2]}" "${args[3]}" "${args[5]}" "${args[6]}" "${args[7]}" "${args[8]}"
 for value in "$md_steps" "$opt_md_iter" "$max_iter"; do
@@ -90,6 +95,7 @@ ts_structure="$(basename "${ts_pdb%.pdb}")"
 
 check_template "$cp2k_input"
 qmtool check-selection -p "$topology" -q "$qm_selection" || exit 1
+[[ -n "$qmmm_reference" ]] && set_qmmm_reference "$qmmm_reference" "$topology"
 
 ### Every mutant needs exactly one line in both lists
 mapfile -t mutants < <(awk 'NF {print $1}' "$mut_list")

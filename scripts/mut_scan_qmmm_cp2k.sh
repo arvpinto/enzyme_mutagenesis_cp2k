@@ -15,11 +15,14 @@ Usage: mut_scan_qmmm_cp2k.sh [options] <residue_list> <scan_type> <topology> <re
   <selection>            AMBER mask of the part rebuilt with LEaP (e.g. :1-124)
   <leap_template>        LEaP input that rebuilds that part with the original force field
   <cp2k_template>        CP2K QM/MM single-point template (RUN_TYPE ENERGY)
-  <qm_selection>         VMD selection of the QM layer
+  <qm_selection>         selection of the QM layer (see qmmm_mut_tools.py make-selection)
 
 Options:
   --max-iter N       maximum number of optimization steps (default: 5000)
   --no-wt            do not create the WT/ directory with the reference (wild-type) inputs
+  --qmmm-reference F forceeval_qmmm.inc of the unmodified system: its QM cell and the
+                     parameters of the links that still exist are used for every system
+                     (default: QM cell and links computed for each system)
   --force-ff         accept a LEaP template that changes atom types of unmodified residues
   --overwrite        replace <scan_type>_* directories that already exist (default: skip them)
   -h, --help         show this message
@@ -32,11 +35,13 @@ EOF
 
 make_wt=1; overwrite=0; max_iter=5000
 build_opts=()
+qmmm_reference=""
 args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --max-iter) max_iter="$2"; shift ;;
         --no-wt) make_wt=0 ;;
+        --qmmm-reference) qmmm_reference="$2"; shift ;;
         --force-ff) build_opts+=(--force-ff) ;;
         --overwrite) overwrite=1 ;;
         -h|--help) usage; exit 0 ;;
@@ -50,7 +55,7 @@ if [[ ${#args[@]} -ne 9 ]]; then usage >&2; exit 1; fi
 # shellcheck source=qmmm_common.sh
 source "$(dirname "$(readlink -f "$0")")/qmmm_common.sh"
 
-need_cmd pymol tleap cpptraj vmd
+need_cmd tleap cpptraj
 find_python
 need_files "${args[0]}" "${args[2]}" "${args[3]}" "${args[4]}" "${args[6]}" "${args[7]}" "${args[8]}"
 [[ "$max_iter" =~ ^[0-9]+$ ]] || die "--max-iter needs an integer."
@@ -70,6 +75,7 @@ ts_structure="$(basename "${ts_pdb%.pdb}")"
 
 check_template "$cp2k_input"
 qmtool check-selection -p "$topology" -q "$qm_selection" || exit 1
+[[ -n "$qmmm_reference" ]] && set_qmmm_reference "$qmmm_reference" "$topology"
 
 top_dir="$(pwd)"
 summary="$top_dir/scan_summary.dat"

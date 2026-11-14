@@ -14,9 +14,9 @@ else
         *) export PATH="$_mut_scripts_dir:$PATH" ;;
     esac
     echo "enzyme_mutagenesis_cp2k scripts available from $_mut_scripts_dir"
-    for _mut_cmd in cpptraj tleap vmd pymol; do
+    for _mut_cmd in cpptraj tleap; do
         command -v "$_mut_cmd" >/dev/null 2>&1 || echo "Warning: $_mut_cmd was not found in PATH."
     done
-    python3 -c "import parmed" >/dev/null 2>&1 || python -c "import parmed" >/dev/null 2>&1 || echo "Warning: ParmEd was not found in the default Python."
+    python3 -c "import parmed, numpy" >/dev/null 2>&1 || echo "Warning: python3 cannot import ParmEd and NumPy."
 fi
 unset _mut_scripts_dir _mut_cmd

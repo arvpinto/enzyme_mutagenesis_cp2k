@@ -22,11 +22,9 @@
 <br>
 ● CP2K
 <br>
-● VMD
-<br>
 ● CPPTRAJ and ParmEd (from AmberTools)
 <br>
-● Python 3 with Matplotlib (for the plots)
+● Python 3 with NumPy and Matplotlib
 </p>
 
 
@@ -41,7 +39,7 @@
 <pre style="color: white; background-color: black;">
 # from an AMBER mask
 <span style="color: #9966CC;">user@machine:~$</span> qmmm_mut_tools.py make-selection -p hpla2_ee.prmtop -m ':47,48,128|:91&amp;!@N,H,CA,HA,C,O' -o qm_selection.dat
-# from a file with the VMD indexes of the QM atoms (0-based, hence --zero-based; omit it for serial numbers)
+# from a file with 0-based indexes of the QM atoms, e.g. VMD indexes (hence --zero-based; omit it for serial numbers)
 <span style="color: #9966CC;">user@machine:~$</span> qmmm_mut_tools.py make-selection -p hpla2_ee.prmtop -s qm_indexes.dat --zero-based -o qm_selection.dat
 # check that an existing selection matches the topology
 <span style="color: #9966CC;">user@machine:~$</span> qmmm_mut_tools.py check-selection -p hpla2_ee.prmtop -q qm_selection.dat
@@ -56,9 +54,11 @@ The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/del_res_
 <pre style="color: white; background-color: black;">
 <span style="color: #FF3366; font-weight: bold;">del_res_qmmm_cp2k.sh [options] &lt;residue_list&gt; &lt;topology&gt; &lt;reactant_structure&gt; &lt;ts_structure&gt; &lt;cp2k_template&gt; &lt;qm_selection&gt;</span>
 
-<span style="color: #9966CC;">user@machine:~$</span> del_res_qmmm_cp2k.sh deletion_list.dat hpla2_ee.prmtop R.pdb TS.pdb cp2k_template.inp qm_selection.dat
+<span style="color: #9966CC;">user@machine:~$</span> del_res_qmmm_cp2k.sh --qmmm-reference forceeval_qmmm.inc deletion_list.dat hpla2_ee.prmtop R.pdb TS.pdb cp2k_template.inp qm_selection.dat
 </pre>
-<p align="justify"> The script creates a directory for each residue in the list, where the CP2K input files will be generated, and a WT directory with the single-points of the unmodified system, so that the reference energy barrier is calculated with exactly the same settings. It processes the provided topology and structures using CPPTRAJ to remove the specified residues. To maintain the QM/MM configuration, the backbone of residues that are bonded to the QM layer is preserved while only their sidechains are deleted. If the CA atom is part of the QM layer, the CB atom is kept without charge and Lennard-Jones parameters to host the link atom, and the residual charge of the remaining MM backbone atoms is spread over them to keep an integer MM charge (<code>--no-rebalance</code> turns this off). Residues that cannot be removed without leaving broken bonds in the QM layer (GLY and PRO residues bonded to the QM layer, or parts of the substrate) are skipped, and should be addressed with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan.html" target="_blank">mutagenesis scan</a> protocol instead. The deletion_summary.dat file reports what was done to each residue. Since residue deletion alters atom numbering, the QM/MM settings must be updated accordingly after each deletion. The <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/vmd_forceeval.tcl" target="_blank">vmd_forceeval.tcl</a> script is called within the latter to produce a file with the configuration of the QM layer, defined by the selection in the qm_selection.dat file. The resulting QM layer is then checked against the topology (link atoms, charge, number of electrons), and no inputs are written for a residue that fails these checks. </p>
+<p align="justify"> The script creates a directory for each residue in the list, where the CP2K input files will be generated, and a WT directory with the single-points of the unmodified system, so that the reference energy barrier is calculated with exactly the same settings. It processes the provided topology and structures using CPPTRAJ to remove the specified residues. To maintain the QM/MM configuration, the backbone of residues that are bonded to the QM layer is preserved while only their sidechains are deleted. If the CA atom is part of the QM layer, the CB atom is kept without charge and Lennard-Jones parameters to host the link atom, and the residual charge of the remaining MM backbone atoms is spread over them to keep an integer MM charge (<code>--no-rebalance</code> turns this off). Residues that cannot be removed without leaving broken bonds in the QM layer (GLY and PRO residues bonded to the QM layer, or parts of the substrate) are skipped, and should be addressed with the <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/mutagenesis_scan.html" target="_blank">mutagenesis scan</a> protocol instead. The deletion_summary.dat file reports what was done to each residue. Since residue deletion alters atom numbering, the QM/MM settings must be updated accordingly after each deletion. The <code>qmmm-section</code> subcommand of <a href="https://arvpinto.github.io/enzyme_mutagenesis_cp2k/scripts/qmmm_mut_tools.py" target="_blank">qmmm_mut_tools.py</a> then writes a file with the configuration of the QM layer (QM cell, QM atoms and link atoms), defined by the selection in the qm_selection.dat file. The resulting QM layer is then checked against the topology (link atoms, charge, number of electrons), and no inputs are written for a residue that fails these checks. </p>
+
+<p align="justify">By default, the QM cell is built around the QM atoms of each system (5 Å on each side) and the link atom parameters (<code>ALPHA_IMOMM</code> and <code>QMMM_SCALE_FACTOR</code>) are estimated from the charges of the MM atoms. If the QM/MM section used to obtain the original reaction path is available, it should be given with <code>--qmmm-reference forceeval_qmmm.inc</code> (the file used for this example is in the hpla2_example folder). The QM cell is then copied from that file, and every link atom that also exists in the original system keeps its original parameters, so that the WT single points reproduce the original setup and all systems with a deleted residue share the same QM cell. Only links that did not exist before (for instance, around a mutated residue of the QM layer) get estimated parameters, and they are listed in the qmmm_section.log file. A system whose QM atoms do not fit in the reference cell (less than 2 Å from its edges, see <code>--min-margin</code>) is skipped.</p>
 
 <p align="justify"> Note that residues that belong to the QM layer or take part in the reaction can be included in the list, but the transition state geometry loses its meaning once a catalytic residue is removed, so their energy barriers should not be interpreted as contributions. </p>
 
@@ -93,7 +93,7 @@ The energy barriers can be plotted with the <a href="https://arvpinto.github.io/
     <img src="hpla2_example/bar_plot.png">
 </div>
 
-<p align="justify"> The calculated energy barriers upon deletion can be compared with the original energy barrier (14.8 kcal⋅mol<sup>-1</sup>, dashed line) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. A higher energy barrier upon deletion (red) means that the residue stabilizes the transition state relative to the reactant, while a lower one (blue) means that it is destabilizing. Here, we can see that the deletion of most residues is unfavorable, however, there are many residues whose deletion decreases the energy barrier associated with the TS. Most differences are of a few tenths of kcal⋅mol<sup>-1</sup>, so only the larger ones should be considered when selecting residues. </p>
+<p align="justify"> The calculated energy barriers upon deletion can be compared with the energy barrier of the unmodified system (14.55 kcal⋅mol<sup>-1</sup>, dashed line) to see if the residues are stabilizing or destabilizing to the transition state of the reaction step. A higher energy barrier upon deletion (red) means that the residue stabilizes the transition state relative to the reactant, while a lower one (blue) means that it is destabilizing. Most differences are of a few tenths of kcal⋅mol<sup>-1</sup>, so only the larger ones should be considered when selecting residues. </p>
 
 <br>
 

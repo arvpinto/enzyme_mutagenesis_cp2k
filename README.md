@@ -18,7 +18,7 @@
 ● The corresponding *prmtop topology file (refer to the Tutorial for Transition State (TS) Searches of Enzymatic Reaction Mechanisms using QM/MM Methods in CP2K)
 </p>
 
-<p align="justify"> Additional required files can be either obtained through specific instructions or found as sample files in the repository. The protocols’ scripts generate input files compatible with CP2K, streamlining the automation of these analyses. The scripts employed in the protocols require the availability of software such as VMD, PyMOL, AmberTools (CPPTRAJ, LEaP and ParmEd) and Python 3 with Matplotlib. The scripts produce input files that can be directly run in CP2K, thus providing pipelines to automatize these analyses. Every script lists its options with <code>-h</code>.
+<p align="justify"> Additional required files can be either obtained through specific instructions or found as sample files in the repository. The protocols’ scripts generate input files compatible with CP2K, streamlining the automation of these analyses. The scripts employed in the protocols only require AmberTools (CPPTRAJ, LEaP and ParmEd) and Python 3 with NumPy and Matplotlib. The scripts produce input files that can be directly run in CP2K, thus providing pipelines to automatize these analyses. Every script lists its options with <code>-h</code>.
 <br>
 <br>
 The protocols can be downloaded from here <a href="https://github.com/arvpinto/enzyme_mutagenesis_cp2k/archive/refs/heads/main.zip" target="_blank">enzyme_mutagenesis_cp2k</a>.

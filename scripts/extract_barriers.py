@@ -10,6 +10,8 @@ For each directory the barrier is E(TS) - E(reactant), taken from the last
 "ENERGY| Total FORCE_EVAL" line of <prefix><state>.out. A calculation is rejected when the
 output is missing, CP2K did not end normally, or the SCF did not converge; rejected entries
 are reported and left out of the output file (they are never written as zeros).
+Optimizations (opt_res_*, opt_md_res_*) that stopped at MAX_ITER are reported, and left out
+with --strict-opt.
 """
 
 import argparse
@@ -47,6 +49,20 @@ def read_energy(path):
     return energy, None
 
 
+def unconverged_optimizations(directory, states):
+    """Optimizations of the directory (opt_res_*, opt_md_res_*) that stopped at MAX_ITER."""
+    stopped = []
+    for state in states:
+        for prefix in ("opt_res_", "opt_md_res_"):
+            path = os.path.join(directory, f"{prefix}{state}.out")
+            if not os.path.isfile(path):
+                continue
+            with open(path, errors="replace") as handle:
+                if any("MAXIMUM NUMBER OF OPTIMIZATION STEPS REACHED" in line for line in handle):
+                    stopped.append(f"{prefix}{state}")
+    return stopped
+
+
 def barrier(directory, prefix, reactant, ts):
     e_r, why_r = read_energy(os.path.join(directory, f"{prefix}{reactant}.out"))
     e_ts, why_ts = read_energy(os.path.join(directory, f"{prefix}{ts}.out"))
@@ -71,6 +87,8 @@ def main():
     parser.add_argument("--prefix", default="sp_res_", help="prefix of the outputs (default: sp_res_)")
     parser.add_argument("--wt-dir", help="directory with the wild-type single points (e.g. WT)")
     parser.add_argument("--wt", type=float, help="wild-type barrier in kcal/mol, if not computed here")
+    parser.add_argument("--strict-opt", action="store_true",
+                        help="leave out entries whose optimization stopped at MAX_ITER (default: keep them with a warning)")
     parser.add_argument("-o", "--output", default="energy_differences.dat",
                         help="output file (default: energy_differences.dat)")
     args = parser.parse_args()
@@ -82,11 +100,16 @@ def main():
             sys.exit(f"Error: wild-type reference in {args.wt_dir} is not usable ({why})")
 
     wt_dir = os.path.normpath(args.wt_dir) if args.wt_dir else None
-    results, failed = [], []
+    results, failed, not_converged = [], [], []
     for directory in args.directories:
         if not os.path.isdir(directory) or os.path.normpath(directory) == wt_dir:
             continue
         value, why = barrier(directory, args.prefix, args.reactant, args.ts)
+        stopped = unconverged_optimizations(directory, (args.reactant, args.ts))
+        if not why and stopped:
+            not_converged.append((label_of(directory), ", ".join(stopped)))
+            if args.strict_opt:
+                why = f"optimization not converged ({', '.join(stopped)})"
         if why:
             failed.append((label_of(directory), why))
         else:
@@ -104,6 +127,10 @@ def main():
 
     print(f"{len(results)} barriers written to {args.output}"
           + (f" (wild type: {wt:.2f} kcal/mol)" if wt is not None else ""))
+    if not args.strict_opt:
+        for label, which in not_converged:
+            sys.stderr.write(f"Warning: {label} kept, but the optimization stopped at MAX_ITER ({which}); "
+                             "use --strict-opt to leave such entries out\n")
     for label, why in failed:
         sys.stderr.write(f"Warning: {label} left out ({why})\n")
     if failed:
