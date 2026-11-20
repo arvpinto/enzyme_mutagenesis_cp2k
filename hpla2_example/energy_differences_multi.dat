@@ -1,0 +1,6 @@
+# label  barrier (kcal/mol)  difference to WT
+WT 14.5522 0.0000
+MUT_001 8.7760 -5.7762
+MUT_002 8.6944 -5.8579
+MUT_003 6.9162 -7.6360
+MUT_004 4.4477 -10.1045

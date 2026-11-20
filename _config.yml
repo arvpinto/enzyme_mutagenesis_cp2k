@@ -1,0 +1,70 @@
+title: Tutorial for the calculation of per-residue contributions to the energy barrier in CP2K
+description: Measure how each residue of an enzyme changes the QM/MM energy barrier of a reaction step, by deleting residues one at a time, by a mutagenesis scan and with multipoint mutant variants, applied to the reactant and transition state of phospholipid hydrolysis by sPLA2.
+author: Alexandre V. Pinto
+lang: en
+image: /assets/img/hero.webp
+
+# Shown at the top of the main page. "hero" is the image next to the title (a large
+# and a small version, and a light-mode version drawn on a grey plate; the original
+# is assets/img/TS_DEL_RESIDUES.png). The topic name and colour are the ones this
+# entry has on the home page (arvpinto.github.io, _data/categories.yml).
+topic: QM/MM
+topic_color: "#ff5257"
+series: Part 4 of Enzyme QM/MM with CP2K
+tools: [CP2K, AmberTools, ParmEd, Python]
+hero:
+  fig: residue-deletion           # animated figure (assets/js/card-figures.js, data in assets/data/cards/)
+  src: /assets/img/hero-fig.webp
+  src_light: /assets/img/hero-fig-light.webp
+  width: 1120
+  height: 700
+  alt: Human phospholipase A2 cartoon with the QM region at its centre and a bar chart of the change in barrier as each residue is deleted
+
+# Links to the entries before and after this one in the series (shown before the
+# first section and after the last one).
+previous_entry:
+  title: Dynamic QM/MM
+  url: https://arvpinto.github.io/enzyme_us_cp2k/
+next_entry:
+  title: Transition state macrodipole
+  url: https://arvpinto.github.io/enzyme_ts_macrodipole/
+
+# Pages, in reading order. They build the "Sections" menu and the
+# Previous / Next links at the bottom of every page.
+sections:
+  - title: Overview
+    url: /
+  - num: I
+    title: Residue deletion
+    url: /residue_deletion.html
+  - num: II
+    title: Mutagenesis scan
+    url: /mutagenesis_scan.html
+  - num: III
+    title: Multipoint mutagenesis
+    url: /mutagenesis_multi.html
+
+# Home page (the menu bar links to its Portfolio and About sections) and this repository.
+home_url: https://arvpinto.github.io/
+home_label: Portfolio
+repo_url: https://github.com/arvpinto/enzyme_mutagenesis_cp2k
+
+# Name and affiliation shown under the title of the main page (same lines as on the home page).
+author_degree: PhD in Chemistry
+affiliation:
+  - High Performance Computing in Molecular Modelling Research Group, LAQV-REQUIMTE
+  - Department of Chemistry and Biochemistry, Faculty of Sciences, University of Porto
+
+# Licence named in the footer: add a "license:" block (name, url) as in the other
+# repositories once a LICENSE file is added to this one.
+
+# Kept in the repository but not published with the pages: the script that renders
+# the movie of Section III. The scripts and example files are published, since the
+# pages link to them.
+exclude:
+  - tools
+  - __pycache__
+
+# The pages use their own layout and stylesheet (no remote theme), matching the home page.
+plugins:
+  - jekyll-seo-tag
